@@ -26,8 +26,9 @@ rule copy
 
 # build
 
+build $builddir/production_rule_table.o: cxx $root/src/production_rule_table.c
 build $builddir/symbol_table.o: cxx $root/src/symbol_table.c
-build $builddir/lib/libgoodman.a: ar $builddir/symbol_table.o
+build $builddir/lib/libgoodman.a: ar $builddir/symbol_table.o $builddir/production_rule_table.o
 build goodman: phony $builddir/lib/libgoodman.a
 
 # test
@@ -36,4 +37,8 @@ build $builddir/symbol_table_test.o: cxx $root/test/symbol_table_test.c
 build $builddir/test/symbol_table_test: link $builddir/symbol_table_test.o | $builddir/lib/libgoodman.a
   libs = -lgoodman -lcollections -lconnie
 
-build test: phony $builddir/test/symbol_table_test
+build $builddir/production_rule_table_test.o: cxx $root/test/production_rule_table_test.c
+build $builddir/test/production_rule_table_test: link $builddir/production_rule_table_test.o | $builddir/lib/libgoodman.a
+  libs = -lgoodman -lcollections -lconnie
+
+build test: phony $builddir/test/symbol_table_test $builddir/test/production_rule_table_test

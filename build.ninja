@@ -1,0 +1,44 @@
+root = .
+builddir = build
+libdir = /usr/local/lib
+includedir = /usr/local/include
+cxx = gcc
+ar = ar
+cflags = -g -Wall -Wextra
+ldflags = -L$builddir/lib
+
+rule cxx
+  command = $cxx -MMD -MT $out -MF $out.d $cflags -c $in -o $out -Iinclude -Isrc
+  description = CXX $out
+  depfile = $out.d
+  deps = gcc
+
+rule ar
+  command = rm -f $out && $ar crs $out $in
+  description = AR $out
+
+rule link
+  command = $cxx $ldflags -o $out $in $libs
+  description = LINK $out
+
+rule copy
+  command = cp -rf $in $out
+
+# build
+
+build $builddir/production_rule_table.o: cxx $root/src/production_rule_table.c
+build $builddir/symbol_table.o: cxx $root/src/symbol_table.c
+build $builddir/lib/libgoodman.a: ar $builddir/symbol_table.o $builddir/production_rule_table.o
+build goodman: phony $builddir/lib/libgoodman.a
+
+# test
+
+build $builddir/symbol_table_test.o: cxx $root/test/symbol_table_test.c
+build $builddir/test/symbol_table_test: link $builddir/symbol_table_test.o | $builddir/lib/libgoodman.a
+  libs = -lgoodman -lcollections -lconnie
+
+build $builddir/production_rule_table_test.o: cxx $root/test/production_rule_table_test.c
+build $builddir/test/production_rule_table_test: link $builddir/production_rule_table_test.o | $builddir/lib/libgoodman.a
+  libs = -lgoodman -lcollections -lconnie
+
+build test: phony $builddir/test/symbol_table_test $builddir/test/production_rule_table_test

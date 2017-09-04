@@ -82,7 +82,7 @@ void put_symbol_as(connie_Connie *c, grm_Grammar *grm, const char *symbol, grm_S
 	id = grm_put_symbol_as(grm, symbol, type);
 	A_NOT_NULL(c, id);
 
-	t = grm_get_symbol_type(grm, *id);
+	t = grm_get_symbol_type(*id);
 	A_EQL_INT(c, grm_SYMTYPE_NON_TERMINAL, t);
 
 	s = grm_lookup_symbol(grm, *id);
@@ -99,7 +99,7 @@ void put_symbol(connie_Connie *c, grm_Grammar *grm, const char *symbol, grm_Symb
 	id = grm_put_symbol(grm, symbol);
 	A_NOT_NULL(c, id);
 
-	t = grm_get_symbol_type(grm, *id);
+	t = grm_get_symbol_type(*id);
 	A_EQL_INT(c, expected_type, t);
 
 	s = grm_lookup_symbol(grm, *id);

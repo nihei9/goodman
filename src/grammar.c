@@ -182,3 +182,31 @@ int grm_append_prule(grm_Grammar *grm, const char *lhs, const char *rhs[], size_
 
 	return 0;
 }
+
+/*
+ * 指定のidに対応する生成規則を取得する。
+ */
+const grm_ProductionRule *grm_find_prule_by_id(const grm_Grammar *grm, unsigned int prule_id)
+{
+	grm_ProductionRuleFilter f;
+
+	grm_set_pr_filter_by_id(&f, prule_id);
+	
+	return grm_next_pr(&f, grm->prtbl);
+}
+
+/*
+ * 指定の左辺値を持つ生成規則を取得する。
+ */
+grm_ProductionRuleFilter *grm_find_prule_by_lhs(const grm_Grammar *grm, grm_SymbolID lhs, grm_ProductionRuleFilter *filter)
+{
+	return grm_set_pr_filter_by_lhs(filter, lhs);
+}
+
+/*
+ * 全ての生成規則を取得する。
+ */
+grm_ProductionRuleFilter *grm_find_all_prule(const grm_Grammar *grm, grm_ProductionRuleFilter *filter)
+{
+	return grm_set_pr_filter_match_all(filter);
+}

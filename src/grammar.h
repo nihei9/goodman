@@ -21,5 +21,6 @@ int grm_append_prule(grm_Grammar *grm, const char *lhs, const char *rhs[], size_
 const grm_ProductionRule *grm_find_prule_by_id(const grm_Grammar *grm, unsigned int prule_id);
 grm_ProductionRuleFilter *grm_find_prule_by_lhs(const grm_Grammar *grm, grm_SymbolID lhs, grm_ProductionRuleFilter *filter);
 grm_ProductionRuleFilter *grm_find_all_prule(const grm_Grammar *grm, grm_ProductionRuleFilter *filter);
+const grm_ProductionRule *grm_next_prule(const grm_Grammar *grm, grm_ProductionRuleFilter *filter);
 
 #endif

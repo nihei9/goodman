@@ -210,3 +210,11 @@ grm_ProductionRuleFilter *grm_find_all_prule(const grm_Grammar *grm, grm_Product
 {
 	return grm_set_pr_filter_match_all(filter);
 }
+
+/*
+ * 生成規則のセットから、要素をひとつずつ取得する。
+ */
+const grm_ProductionRule *grm_next_prule(const grm_Grammar *grm, grm_ProductionRuleFilter *filter)
+{
+	return grm_next_pr(filter, grm->prtbl);
+}

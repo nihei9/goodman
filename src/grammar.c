@@ -148,6 +148,7 @@ int grm_append_prule(grm_Grammar *grm, const char *lhs, const char *rhs[], size_
 {
 	const grm_SymbolID *lhs_id;
 	unsigned int i;
+	int ret;
 
 	if (grm->pr_rhs_work.len < rhs_len) {
 		grm_SymbolID *new_rhs;
@@ -178,7 +179,10 @@ int grm_append_prule(grm_Grammar *grm, const char *lhs, const char *rhs[], size_
 		grm->pr_rhs_work.rhs[i] = *id;
 	}
 
-	grm_append_to_prtbl(grm->prtbl, *lhs_id, grm->pr_rhs_work.rhs, rhs_len);
+	ret = grm_append_to_prtbl(grm->prtbl, *lhs_id, grm->pr_rhs_work.rhs, rhs_len);
+	if (ret != 0) {
+		return 1;
+	}
 
 	return 0;
 }

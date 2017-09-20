@@ -151,5 +151,43 @@ static void test_append_production_rule(connie_Connie *c)
         A_NULL(c, pr);
     }
 
+    {
+        grm_ProductionRuleFilter f;
+        const grm_ProductionRule *pr;
+
+        grm_set_pr_filter_match_all(&f);
+        
+        pr = grm_next_pr(&f, prtbl);
+        A_NOT_NULL(c, pr);
+        A_EQL_ULONG(c, 101, grm_get_pr_lhs(pr));
+        A_EQL_ULONG(c, RHS_LEN(rhs_foo_1), grm_get_pr_rhs_len(pr));
+        A_EQL_ULONG_ARRAY(c, rhs_foo_1, RHS_LEN(rhs_foo_1), grm_get_pr_rhs(pr), connie_NOT_IGNORE_ORDER);
+        id_foo_1 = grm_get_pr_id(pr);
+        
+        pr = grm_next_pr(&f, prtbl);
+        A_NOT_NULL(c, pr);
+        A_EQL_ULONG(c, 102, grm_get_pr_lhs(pr));
+        A_EQL_ULONG(c, RHS_LEN(rhs_bar_1), grm_get_pr_rhs_len(pr));
+        A_EQL_ULONG_ARRAY(c, rhs_bar_1, RHS_LEN(rhs_bar_1), grm_get_pr_rhs(pr), connie_NOT_IGNORE_ORDER);
+        id_bar_1 = grm_get_pr_id(pr);
+        
+        pr = grm_next_pr(&f, prtbl);
+        A_NOT_NULL(c, pr);
+        A_EQL_ULONG(c, 102, grm_get_pr_lhs(pr));
+        A_EQL_ULONG(c, RHS_LEN(rhs_bar_2), grm_get_pr_rhs_len(pr));
+        A_EQL_ULONG_ARRAY(c, rhs_bar_2, RHS_LEN(rhs_bar_2), grm_get_pr_rhs(pr), connie_NOT_IGNORE_ORDER);
+        id_bar_2 = grm_get_pr_id(pr);
+        
+        pr = grm_next_pr(&f, prtbl);
+        A_NOT_NULL(c, pr);
+        A_EQL_ULONG(c, 103, grm_get_pr_lhs(pr));
+        A_EQL_ULONG(c, RHS_LEN(rhs_baz_1), grm_get_pr_rhs_len(pr));
+        A_EQL_ULONG_ARRAY(c, rhs_baz_1, RHS_LEN(rhs_baz_1), grm_get_pr_rhs(pr), connie_NOT_IGNORE_ORDER);
+        id_baz_1 = grm_get_pr_id(pr);
+        
+        pr = grm_next_pr(&f, prtbl);
+        A_NULL(c, pr);
+    }
+
     grm_delete_prtbl(prtbl);
 }

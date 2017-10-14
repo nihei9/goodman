@@ -140,13 +140,21 @@ grm_SymbolID grm_set_start_symbol(grm_Grammar *grm, grm_SymbolID id)
 	return id;
 }
 
+/*
+ * 生成規則の数を返す。
+ */
+size_t grm_get_num_of_prule(const grm_Grammar *grm)
+{
+	return grm_get_prtbl_len(grm->prtbl);
+}
 
 /*
  * 生成規則を登録する。
  */
 int grm_append_prule(grm_Grammar *grm, const char *lhs, const char *rhs[], size_t rhs_len)
 {
-	const grm_SymbolID *lhs_id;
+	const grm_SymbolID *tmp_lhs_id;
+	grm_SymbolID lhs_id;
 	unsigned int i;
 	int ret;
 
@@ -164,10 +172,11 @@ int grm_append_prule(grm_Grammar *grm, const char *lhs, const char *rhs[], size_
 		grm->pr_rhs_work.len = new_len;
 	}
 
-	lhs_id = grm_put_symbol(grm, lhs);
-	if (lhs_id == NULL) {
+	tmp_lhs_id = grm_put_symbol(grm, lhs);
+	if (tmp_lhs_id == NULL) {
 		return 1;
 	}
+	lhs_id = *tmp_lhs_id;
 
 	for (i = 0; i < rhs_len; i++) {
 		const grm_SymbolID *id;
@@ -179,7 +188,7 @@ int grm_append_prule(grm_Grammar *grm, const char *lhs, const char *rhs[], size_
 		grm->pr_rhs_work.rhs[i] = *id;
 	}
 
-	ret = grm_append_to_prtbl(grm->prtbl, *lhs_id, grm->pr_rhs_work.rhs, rhs_len);
+	ret = grm_append_to_prtbl(grm->prtbl, lhs_id, grm->pr_rhs_work.rhs, rhs_len);
 	if (ret != 0) {
 		return 1;
 	}

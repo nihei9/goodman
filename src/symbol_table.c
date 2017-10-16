@@ -69,6 +69,9 @@ void grm_delete_symtbl(grm_SymbolTable *symtbl)
 
 /*
  * symbolをsymtblへ登録する。
+ * 
+ * 戻り値は内部的に保持するgrm_SymbolIDへのポインタとなるため、次回呼び出し時には内容が書き換わる可能性がある。
+ * よって、戻り値を受け取った呼び出し元はすぐにgrm_SymbolID型の変数へと値を退避させること。
  */
 const grm_SymbolID *grm_put_in_symtbl(grm_SymbolTable *symtbl, const char *symbol, grm_SymbolType type)
 {

@@ -17,6 +17,7 @@ typedef struct grm_ProductionRuleTable grm_ProductionRuleTable;
 grm_ProductionRuleTable *grm_new_prtbl(void);
 void grm_delete_prtbl(grm_ProductionRuleTable *prtbl);
 int grm_append_to_prtbl(grm_ProductionRuleTable *prtbl, grm_SymbolID lhs, const grm_SymbolID *rhs, size_t rhs_len);
+size_t grm_get_prtbl_len(const grm_ProductionRuleTable *prtbl);
 
 typedef struct grm_ProductionRuleFilter {
 	arr_Filter prs_filter;

@@ -141,6 +141,15 @@ grm_SymbolID grm_set_start_symbol(grm_Grammar *grm, grm_SymbolID id)
 }
 
 /*
+ * 開始記号を取得する。
+ * この関数は必ず grm_set_start_symbol() で開始記号を登録した後に呼ぶこと。
+ */
+grm_SymbolID grm_get_start_symbol(grm_Grammar *grm)
+{
+	return grm->start_symbol_id;
+}
+
+/*
  * 生成規則の数を返す。
  */
 size_t grm_get_num_of_prule(const grm_Grammar *grm)

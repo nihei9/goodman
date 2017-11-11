@@ -155,35 +155,20 @@ static void ffset_set_flws_calc_frame(ffset_FollowSetCalcFrame *frame, grm_Symbo
 
 static int ffset_calc_flws_at(ffset_FollowSet *flws, ffset_FollowSetCalcFrame *frame, const grm_Grammar *grm, const ffset_FirstSet *fsts)
 {
-    ffset_FollowSetTableElem *elem;
     const grm_SymbolID ssym = grm_get_start_symbol(grm);
 
     frame->arr_fill_index = frame->arr_bottom_index;
     frame->has_eof = 0;
     frame->already_caluclated = 0;
 
-    elem = (ffset_FollowSetTableElem *) hmap_lookup(flws->set.map, &frame->sym);
-    if (elem == NULL) {
-        void *ret;
-
-        elem = (ffset_FollowSetTableElem *) malloc(sizeof (ffset_FollowSetTableElem));
-        if (elem == NULL) {
-            return 1;
-        }
-        elem->head = NULL;
-        elem->len = 0;
-        elem->has_eof = 0;
-
-        ret = hmap_put(flws->set.map, &frame->sym, &elem);
-        if (ret == NULL) {
-            free(elem);
-            return 1;
-        }
+    // 計算済みなら処理終了
+    if (hmap_lookup(flws->set.map, &frame->sym) != NULL) {
+        return 0;
     }
 
     // 記号が開始記号ならEOFをFOLLOW集合に追加する。
     if (frame->sym == ssym) {
-        elem->has_eof = 1;
+        frame->has_eof = 1;
     }
 
     {
@@ -211,6 +196,8 @@ static int ffset_calc_flws_at(ffset_FollowSet *flws, ffset_FollowSetCalcFrame *f
                 int has_empty;
                 int ret;
                 ffset_FollowSetCalcFrame f;
+                ffset_FollowSetTableElem *elem;
+                size_t j;
 
                 if (rhs[i] != frame->sym) {
                     continue;
@@ -221,23 +208,83 @@ static int ffset_calc_flws_at(ffset_FollowSet *flws, ffset_FollowSetCalcFrame *f
                     return 1;
                 }
 
-                // TODO setをFOLLOW集合に追加する。
+                for (i = 0; i < fsts_len; i++) {
+                    void *ret;
+
+                    ret = arr_set(flws->work.arr, frame->arr_fill_index++, &fsts_set[i]);
+                    if (ret == NULL) {
+                        return 1;
+                    }
+                }
 
                 if (has_empty == 0) {
                     continue;
                 }
 
-                ffset_set_flws_calc_frame(&f, grm_get_pr_lhs(prule), 0);
+                ffset_set_flws_calc_frame(&f, grm_get_pr_lhs(prule), frame->arr_fill_index);
                 ret = ffset_calc_flws_at(flws, &f, grm, fsts);
                 if (ret != 0) {
                     return 1;
                 }
 
-                // TODO 上記で計算したをFOLLOW集合を追加する。
+                elem = (ffset_FollowSetTableElem *) hmap_lookup(flws->set.map, &frame->sym);
+                if (elem == NULL) {
+                    return 1;
+                }
+                for (j = 0; j < elem->len; i++) {
+                    void *ret;
+
+                    ret = arr_set(flws->work.arr, frame->arr_fill_index++, &elem->head[i]);
+                    if (ret == NULL) {
+                        return 1;
+                    }
+                }
             }
         }
 
         prule = grm_next_prule(grm, filter);
+    }
+
+    {
+        ffset_FollowSetTableElem *elem;
+        grm_SymbolID *set;
+        size_t i;
+        void *ret;
+
+        elem = (ffset_FollowSetTableElem *) hmap_lookup(flws->set.map, &frame->sym);
+        if (elem != NULL) {
+            return 0;
+        }
+
+        set = (grm_SymbolID *) calloc(frame->arr_fill_index - frame->arr_bottom_index, sizeof (grm_SymbolID));
+        if (set == NULL) {
+            return 1;
+        }
+        for (i = frame->arr_bottom_index; i < frame->arr_fill_index; i++) {
+            const grm_SymbolID *sym;
+
+            sym = arr_get(flws->work.arr, i);
+            if (sym == NULL) {
+                return 1;
+            }
+
+            set[i] = *sym;
+        }
+
+        elem = (ffset_FollowSetTableElem *) malloc(sizeof (ffset_FollowSetTableElem));
+        if (elem == NULL) {
+            free(set);
+            return 1;
+        }
+        elem->head = set;
+        elem->len = frame->arr_fill_index - frame->arr_bottom_index;
+        elem->has_eof = frame->has_eof;
+
+        ret = hmap_put(flws->set.map, &frame->sym, &elem);
+        if (ret == NULL) {
+            free(elem);
+            return 1;
+        }
     }
 
     return 0;

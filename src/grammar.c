@@ -144,7 +144,7 @@ grm_SymbolID grm_set_start_symbol(grm_Grammar *grm, grm_SymbolID id)
  * 開始記号を取得する。
  * この関数は必ず grm_set_start_symbol() で開始記号を登録した後に呼ぶこと。
  */
-grm_SymbolID grm_get_start_symbol(grm_Grammar *grm)
+grm_SymbolID grm_get_start_symbol(const grm_Grammar *grm)
 {
 	return grm->start_symbol_id;
 }

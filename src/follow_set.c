@@ -240,9 +240,9 @@ static int ffset_calc_flws_at(ffset_FollowSet *flws, ffset_FollowSetCalcFrame *f
                     }
                 }
             }
-        }
 
-        prule = grm_next_prule(grm, filter);
+            prule = grm_next_prule(grm, filter);
+        }
     }
 
     {

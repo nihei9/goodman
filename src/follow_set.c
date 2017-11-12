@@ -47,7 +47,7 @@ ffset_FollowSet *ffset_new_flws(void)
     }
     arr_autoext_on(arr, 64);
 
-    map = hmap_new(c_TYPE_ULONG, c_TYPE_ULONG);
+    map = hmap_new(c_TYPE_ULONG, c_TYPE_PTR);
     if (map == NULL) {
         goto FAILURE;
     }
@@ -100,12 +100,6 @@ int ffset_calc_flws(ffset_FollowSet *flws, const grm_Grammar *grm, const ffset_F
         ffset_FollowSetCalcFrame frame;
         int ret;
 
-        // 計算対象は非終端記号のみ
-        if (grm_get_symbol_type(sym) != grm_SYMTYPE_NON_TERMINAL) {
-            prule = grm_next_prule(grm, filter);
-            continue;
-        }
-
         ffset_set_flws_calc_frame(&frame, sym, 0);
         ret = ffset_calc_flws_at(flws, &frame, grm, fsts);
         if (ret != 0) {
@@ -121,25 +115,25 @@ int ffset_calc_flws(ffset_FollowSet *flws, const grm_Grammar *grm, const ffset_F
 
 int ffset_get_flws(grm_SymbolID **set, size_t *len, int *has_eof, const ffset_FollowSet *flws, grm_SymbolID symbol)
 {
-    const ffset_FollowSetTableElem *elem;
+    const ffset_FollowSetTableElem **elem;
 
     if (set != NULL && len == NULL) {
         return 1;
     }
 
-    elem = (const ffset_FollowSetTableElem *) hmap_lookup(flws->set.map, &symbol);
+    elem = (const ffset_FollowSetTableElem **) hmap_lookup(flws->set.map, &symbol);
     if (elem == NULL) {
         return 1;
     }
 
     if (set != NULL) {
-        *set = elem->head;
+        *set = (*elem)->head;
     }
     if (len != NULL) {
-        *len = elem->len;
+        *len = (*elem)->len;
     }
     if (has_eof != NULL) {
-        *has_eof = elem->has_eof;
+        *has_eof = (*elem)->has_eof;
     }
 
     return 0;

@@ -15,6 +15,7 @@ const grm_SymbolID *grm_put_symbol(grm_Grammar *grm, const char *symbol);
 const grm_SymbolID *grm_put_symbol_as(grm_Grammar *grm, const char *symbol, grm_SymbolType type);
 const char *grm_lookup_symbol(const grm_Grammar *grm, grm_SymbolID id);
 grm_SymbolID grm_set_start_symbol(grm_Grammar *grm, grm_SymbolID id);
+grm_SymbolID grm_get_start_symbol(const grm_Grammar *grm);
 size_t grm_get_num_of_prule(const grm_Grammar *grm);
 
 int grm_append_prule(grm_Grammar *grm, const char *lhs, const char *rhs[], size_t rhs_len);

@@ -58,118 +58,142 @@ void test_firstset(connie_Connie *c)
     A_EQL_INT(c, 0, ret);
 
     {
-        grm_SymbolID *set;
-        size_t len;
-        int has_empty;
+        ffset_FirstSetItem item;
         size_t i;
         
-        ret = ffset_get_fsts(&set, &len, &has_empty, fsts, 0, 0);
+        item.input.fsts = fsts;
+
+        item.input.prule_id = 0;
+        item.input.offset = 0;
+        ret = ffset_get_fsts(&item);
         A_EQL_INT(c, 0, ret);
 
         printf("0-0 ... set: [ ");
-        for (i = 0; i < len; i++) {
-            printf("%s ", grm_lookup_symbol(grm, set[i]));
+        for (i = 0; i < item.output.len; i++) {
+            printf("%s ", grm_lookup_symbol(grm, item.output.set[i]));
         }
-        printf("], has_empty: %s\n", (has_empty)? "true" : "false");
+        printf("], has_empty: %s\n", (item.output.has_empty)? "true" : "false");
 
-        ret = ffset_get_fsts(&set, &len, &has_empty, fsts, 0, 1);
+        item.input.prule_id = 0;
+        item.input.offset = 1;
+        ret = ffset_get_fsts(&item);
         A_EQL_INT(c, 0, ret);
 
         printf("0-1 ... set: [ ");
-        for (i = 0; i < len; i++) {
-            printf("%s ", grm_lookup_symbol(grm, set[i]));
+        for (i = 0; i < item.output.len; i++) {
+            printf("%s ", grm_lookup_symbol(grm, item.output.set[i]));
         }
-        printf("], has_empty: %s\n", (has_empty)? "true" : "false");
+        printf("], has_empty: %s\n", (item.output.has_empty)? "true" : "false");
 
-        ret = ffset_get_fsts(&set, &len, &has_empty, fsts, 0, 2);
+        item.input.prule_id = 0;
+        item.input.offset = 2;
+        ret = ffset_get_fsts(&item);
         A_EQL_INT(c, 0, ret);
 
         printf("0-2 ... set: [ ");
-        for (i = 0; i < len; i++) {
-            printf("%s ", grm_lookup_symbol(grm, set[i]));
+        for (i = 0; i < item.output.len; i++) {
+            printf("%s ", grm_lookup_symbol(grm, item.output.set[i]));
         }
-        printf("], has_empty: %s\n", (has_empty)? "true" : "false");
+        printf("], has_empty: %s\n", (item.output.has_empty)? "true" : "false");
 
-        ret = ffset_get_fsts(&set, &len, &has_empty, fsts, 1, 0);
+        item.input.prule_id = 1;
+        item.input.offset = 0;
+        ret = ffset_get_fsts(&item);
         A_EQL_INT(c, 0, ret);
 
         printf("1-0 ... set: [ ");
-        for (i = 0; i < len; i++) {
-            printf("%s ", grm_lookup_symbol(grm, set[i]));
+        for (i = 0; i < item.output.len; i++) {
+            printf("%s ", grm_lookup_symbol(grm, item.output.set[i]));
         }
-        printf("], has_empty: %s\n", (has_empty)? "true" : "false");
+        printf("], has_empty: %s\n", (item.output.has_empty)? "true" : "false");
 
-        ret = ffset_get_fsts(&set, &len, &has_empty, fsts, 2, 0);
+        item.input.prule_id = 2;
+        item.input.offset = 0;
+        ret = ffset_get_fsts(&item);
         A_EQL_INT(c, 0, ret);
 
         printf("2-0 ... set: [ ");
-        for (i = 0; i < len; i++) {
-            printf("%s ", grm_lookup_symbol(grm, set[i]));
+        for (i = 0; i < item.output.len; i++) {
+            printf("%s ", grm_lookup_symbol(grm, item.output.set[i]));
         }
-        printf("], has_empty: %s\n", (has_empty)? "true" : "false");
+        printf("], has_empty: %s\n", (item.output.has_empty)? "true" : "false");
 
-        ret = ffset_get_fsts(&set, &len, &has_empty, fsts, 2, 1);
+        item.input.prule_id = 2;
+        item.input.offset = 2;
+        ret = ffset_get_fsts(&item);
         A_EQL_INT(c, 0, ret);
 
         printf("2-1 ... set: [ ");
-        for (i = 0; i < len; i++) {
-            printf("%s ", grm_lookup_symbol(grm, set[i]));
+        for (i = 0; i < item.output.len; i++) {
+            printf("%s ", grm_lookup_symbol(grm, item.output.set[i]));
         }
-        printf("], has_empty: %s\n", (has_empty)? "true" : "false");
+        printf("], has_empty: %s\n", (item.output.has_empty)? "true" : "false");
 
-        ret = ffset_get_fsts(&set, &len, &has_empty, fsts, 2, 2);
+        item.input.prule_id = 2;
+        item.input.offset = 2;
+        ret = ffset_get_fsts(&item);
         A_EQL_INT(c, 0, ret);
 
         printf("2-2 ... set: [ ");
-        for (i = 0; i < len; i++) {
-            printf("%s ", grm_lookup_symbol(grm, set[i]));
+        for (i = 0; i < item.output.len; i++) {
+            printf("%s ", grm_lookup_symbol(grm, item.output.set[i]));
         }
-        printf("], has_empty: %s\n", (has_empty)? "true" : "false");
+        printf("], has_empty: %s\n", (item.output.has_empty)? "true" : "false");
 
-        ret = ffset_get_fsts(&set, &len, &has_empty, fsts, 3, 0);
+        item.input.prule_id = 3;
+        item.input.offset = 0;
+        ret = ffset_get_fsts(&item);
         A_EQL_INT(c, 0, ret);
 
         printf("3-0 ... set: [ ");
-        for (i = 0; i < len; i++) {
-            printf("%s ", grm_lookup_symbol(grm, set[i]));
+        for (i = 0; i < item.output.len; i++) {
+            printf("%s ", grm_lookup_symbol(grm, item.output.set[i]));
         }
-        printf("], has_empty: %s\n", (has_empty)? "true" : "false");
+        printf("], has_empty: %s\n", (item.output.has_empty)? "true" : "false");
 
-        ret = ffset_get_fsts(&set, &len, &has_empty, fsts, 4, 0);
+        item.input.prule_id = 4;
+        item.input.offset = 0;
+        ret = ffset_get_fsts(&item);
         A_EQL_INT(c, 0, ret);
 
         printf("4-0 ... set: [ ");
-        for (i = 0; i < len; i++) {
-            printf("%s ", grm_lookup_symbol(grm, set[i]));
+        for (i = 0; i < item.output.len; i++) {
+            printf("%s ", grm_lookup_symbol(grm, item.output.set[i]));
         }
-        printf("], has_empty: %s\n", (has_empty)? "true" : "false");
+        printf("], has_empty: %s\n", (item.output.has_empty)? "true" : "false");
 
-        ret = ffset_get_fsts(&set, &len, &has_empty, fsts, 4, 1);
+        item.input.prule_id = 4;
+        item.input.offset = 1;
+        ret = ffset_get_fsts(&item);
         A_EQL_INT(c, 0, ret);
 
         printf("4-1 ... set: [ ");
-        for (i = 0; i < len; i++) {
-            printf("%s ", grm_lookup_symbol(grm, set[i]));
+        for (i = 0; i < item.output.len; i++) {
+            printf("%s ", grm_lookup_symbol(grm, item.output.set[i]));
         }
-        printf("], has_empty: %s\n", (has_empty)? "true" : "false");
+        printf("], has_empty: %s\n", (item.output.has_empty)? "true" : "false");
 
-        ret = ffset_get_fsts(&set, &len, &has_empty, fsts, 4, 2);
+        item.input.prule_id = 4;
+        item.input.offset = 2;
+        ret = ffset_get_fsts(&item);
         A_EQL_INT(c, 0, ret);
 
         printf("4-2 ... set: [ ");
-        for (i = 0; i < len; i++) {
-            printf("%s ", grm_lookup_symbol(grm, set[i]));
+        for (i = 0; i < item.output.len; i++) {
+            printf("%s ", grm_lookup_symbol(grm, item.output.set[i]));
         }
-        printf("], has_empty: %s\n", (has_empty)? "true" : "false");
+        printf("], has_empty: %s\n", (item.output.has_empty)? "true" : "false");
 
-        ret = ffset_get_fsts(&set, &len, &has_empty, fsts, 5, 0);
+        item.input.prule_id = 5;
+        item.input.offset = 0;
+        ret = ffset_get_fsts(&item);
         A_EQL_INT(c, 0, ret);
 
         printf("5-0 ... set: [ ");
-        for (i = 0; i < len; i++) {
-            printf("%s ", grm_lookup_symbol(grm, set[i]));
+        for (i = 0; i < item.output.len; i++) {
+            printf("%s ", grm_lookup_symbol(grm, item.output.set[i]));
         }
-        printf("], has_empty: %s\n", (has_empty)? "true" : "false");
+        printf("], has_empty: %s\n", (item.output.has_empty)? "true" : "false");
     }
 
     ffset_delete_fsts(fsts);

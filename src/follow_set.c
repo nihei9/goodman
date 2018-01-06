@@ -185,9 +185,7 @@ static int ffset_calc_flws_at(ffset_FollowSet *flws, ffset_FollowSetCalcFrame *f
             size_t i;
 
             for (i = 0; i < rhs_len; i++) {
-                grm_SymbolID *fsts_set;
-                size_t fsts_len;
-                int has_empty;
+                ffset_FirstSetItem fsts_item;
                 int ret;
                 ffset_FollowSetCalcFrame f;
                 ffset_FollowSetTableElem *elem;
@@ -197,21 +195,24 @@ static int ffset_calc_flws_at(ffset_FollowSet *flws, ffset_FollowSetCalcFrame *f
                     continue;
                 }
 
-                ret = ffset_get_fsts(&fsts_set, &fsts_len, &has_empty, fsts, grm_get_pr_id(prule), i + 1);
+                fsts_item.input.fsts = (ffset_FirstSet *) fsts;
+                fsts_item.input.prule_id = grm_get_pr_id(prule);
+                fsts_item.input.offset = i + 1;
+                ret = ffset_get_fsts(&fsts_item);
                 if (ret != 0) {
                     return 1;
                 }
 
-                for (i = 0; i < fsts_len; i++) {
+                for (i = 0; i < fsts_item.output.len; i++) {
                     void *ret;
 
-                    ret = arr_set(flws->work.arr, frame->arr_fill_index++, &fsts_set[i]);
+                    ret = arr_set(flws->work.arr, frame->arr_fill_index++, &fsts_item.output.set[i]);
                     if (ret == NULL) {
                         return 1;
                     }
                 }
 
-                if (has_empty == 0) {
+                if (fsts_item.output.has_empty == 0) {
                     continue;
                 }
 

@@ -113,28 +113,18 @@ int ffset_calc_flws(ffset_FollowSet *flws, const grm_Grammar *grm, const ffset_F
 }
 
 
-int ffset_get_flws(grm_SymbolID **set, size_t *len, int *has_eof, const ffset_FollowSet *flws, grm_SymbolID symbol)
+int ffset_get_flws(ffset_FollowSetItem *item)
 {
     const ffset_FollowSetTableElem **elem;
 
-    if (set != NULL && len == NULL) {
-        return 1;
-    }
-
-    elem = (const ffset_FollowSetTableElem **) hmap_lookup(flws->set.map, &symbol);
+    elem = (const ffset_FollowSetTableElem **) hmap_lookup(item->input.flws->set.map, &item->input.symbol);
     if (elem == NULL) {
         return 1;
     }
 
-    if (set != NULL) {
-        *set = (*elem)->head;
-    }
-    if (len != NULL) {
-        *len = (*elem)->len;
-    }
-    if (has_eof != NULL) {
-        *has_eof = (*elem)->has_eof;
-    }
+    item->output.set = (*elem)->head;
+    item->output.len = (*elem)->len;
+    item->output.has_eof = (*elem)->has_eof;
 
     return 0;
 }

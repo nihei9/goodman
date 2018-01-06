@@ -133,7 +133,7 @@ int ffset_calc_fsts(ffset_FirstSet *fsts, const grm_Grammar *grm)
     return 0;
 }
 
-int ffset_get_fsts(grm_SymbolID **set, size_t *len, int *has_empty, const ffset_FirstSet *fsts, unsigned int prule_id, size_t offset)
+int ffset_get_fsts(ffset_FirstSetItem *item)
 {
     ffset_FirstSetTableElem *table_elem;
     ffset_FirstSetBranchElem *branch_elem;
@@ -141,12 +141,8 @@ int ffset_get_fsts(grm_SymbolID **set, size_t *len, int *has_empty, const ffset_
     size_t tmp_len = 0;
     int tmp_has_empty = 0;
 
-    if (set != NULL && len == NULL) {
-        return 1;
-    }
-
-    table_elem = &fsts->set.table[prule_id];
-    branch_elem = (table_elem->head != NULL)? &table_elem->head[offset] : NULL;
+    table_elem = &item->input.fsts->set.table[item->input.prule_id];
+    branch_elem = (table_elem->head != NULL)? &table_elem->head[item->input.offset] : NULL;
 
     if (table_elem->len <= 0) {
         tmp_has_empty = 1;
@@ -156,15 +152,9 @@ int ffset_get_fsts(grm_SymbolID **set, size_t *len, int *has_empty, const ffset_
         tmp_len = branch_elem->len;
     }
 
-    if (set != NULL) {
-        *set = tmp_set;
-    }
-    if (len != NULL) {
-        *len = tmp_len;
-    }
-    if (has_empty != NULL) {
-        *has_empty = tmp_has_empty;
-    }
+    item->output.set = tmp_set;
+    item->output.len = tmp_len;
+    item->output.has_empty = tmp_has_empty;
 
     return 0;
 }

@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 void test_followset(connie_Connie *c);
+void print_result(const grm_Grammar *grm, const ffset_FollowSetItem *item);
 
 int main(void)
 {
@@ -66,42 +67,39 @@ void test_followset(connie_Connie *c)
     A_EQL_INT(c, 0, ret);
 
     {
-        const grm_SymbolID *sym;
-        grm_SymbolID *set;
-        size_t len;
-        int has_eof;
-        size_t i;
+        ffset_FollowSetItem item;
+
+        item.input.flws = flws;
         
-        sym = grm_put_symbol(grm, "E");
-        ret = ffset_get_flws(&set, &len, &has_eof, flws, *sym);
+        item.input.symbol = *grm_put_symbol(grm, "E");
+        ret = ffset_get_flws(&item);
         A_EQL_INT(c, 0, ret);
 
-        printf("%s ... set: [ ", grm_lookup_symbol(grm, *sym));
-        for (i = 0; i < len; i++) {
-            printf("%s ", grm_lookup_symbol(grm, set[i]));
-        }
-        printf("], has_eof: %s\n", (has_eof)? "true" : "false");
+        print_result(grm, &item);
 
-        sym = grm_put_symbol(grm, "T");
-        ret = ffset_get_flws(&set, &len, &has_eof, flws, *sym);
+        item.input.symbol = *grm_put_symbol(grm, "T");
+        ret = ffset_get_flws(&item);
         A_EQL_INT(c, 0, ret);
 
-        printf("%s ... set: [ ", grm_lookup_symbol(grm, *sym));
-        for (i = 0; i < len; i++) {
-            printf("%s ", grm_lookup_symbol(grm, set[i]));
-        }
-        printf("], has_eof: %s\n", (has_eof)? "true" : "false");
+        print_result(grm, &item);
 
-        sym = grm_put_symbol(grm, "F");
-        ret = ffset_get_flws(&set, &len, &has_eof, flws, *sym);
+        item.input.symbol = *grm_put_symbol(grm, "F");
+        ret = ffset_get_flws(&item);
         A_EQL_INT(c, 0, ret);
 
-        printf("%s ... set: [ ", grm_lookup_symbol(grm, *sym));
-        for (i = 0; i < len; i++) {
-            printf("%s ", grm_lookup_symbol(grm, set[i]));
-        }
-        printf("], has_eof: %s\n", (has_eof)? "true" : "false");
+        print_result(grm, &item);
     }
 
     ffset_delete_flws(flws);
+}
+
+void print_result(const grm_Grammar *grm, const ffset_FollowSetItem *item)
+{
+    size_t i;
+
+    printf("%s ... set: [ ", grm_lookup_symbol(grm, item->input.symbol));
+    for (i = 0; i < item->output.len; i++) {
+        printf("%s ", grm_lookup_symbol(grm, item->output.set[i]));
+    }
+    printf("], has_eof: %s\n", (item->output.has_eof)? "true" : "false");
 }

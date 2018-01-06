@@ -113,28 +113,18 @@ int ffset_calc_flws(ffset_FollowSet *flws, const grm_Grammar *grm, const ffset_F
 }
 
 
-int ffset_get_flws(grm_SymbolID **set, size_t *len, int *has_eof, const ffset_FollowSet *flws, grm_SymbolID symbol)
+int ffset_get_flws(ffset_FollowSetItem *item)
 {
     const ffset_FollowSetTableElem **elem;
 
-    if (set != NULL && len == NULL) {
-        return 1;
-    }
-
-    elem = (const ffset_FollowSetTableElem **) hmap_lookup(flws->set.map, &symbol);
+    elem = (const ffset_FollowSetTableElem **) hmap_lookup(item->input.flws->set.map, &item->input.symbol);
     if (elem == NULL) {
         return 1;
     }
 
-    if (set != NULL) {
-        *set = (*elem)->head;
-    }
-    if (len != NULL) {
-        *len = (*elem)->len;
-    }
-    if (has_eof != NULL) {
-        *has_eof = (*elem)->has_eof;
-    }
+    item->output.set = (*elem)->head;
+    item->output.len = (*elem)->len;
+    item->output.has_eof = (*elem)->has_eof;
 
     return 0;
 }
@@ -185,9 +175,7 @@ static int ffset_calc_flws_at(ffset_FollowSet *flws, ffset_FollowSetCalcFrame *f
             size_t i;
 
             for (i = 0; i < rhs_len; i++) {
-                grm_SymbolID *fsts_set;
-                size_t fsts_len;
-                int has_empty;
+                ffset_FirstSetItem fsts_item;
                 int ret;
                 ffset_FollowSetCalcFrame f;
                 ffset_FollowSetTableElem *elem;
@@ -197,21 +185,24 @@ static int ffset_calc_flws_at(ffset_FollowSet *flws, ffset_FollowSetCalcFrame *f
                     continue;
                 }
 
-                ret = ffset_get_fsts(&fsts_set, &fsts_len, &has_empty, fsts, grm_get_pr_id(prule), i + 1);
+                fsts_item.input.fsts = (ffset_FirstSet *) fsts;
+                fsts_item.input.prule_id = grm_get_pr_id(prule);
+                fsts_item.input.offset = i + 1;
+                ret = ffset_get_fsts(&fsts_item);
                 if (ret != 0) {
                     return 1;
                 }
 
-                for (i = 0; i < fsts_len; i++) {
+                for (i = 0; i < fsts_item.output.len; i++) {
                     void *ret;
 
-                    ret = arr_set(flws->work.arr, frame->arr_fill_index++, &fsts_set[i]);
+                    ret = arr_set(flws->work.arr, frame->arr_fill_index++, &fsts_item.output.set[i]);
                     if (ret == NULL) {
                         return 1;
                     }
                 }
 
-                if (has_empty == 0) {
+                if (fsts_item.output.has_empty == 0) {
                     continue;
                 }
 

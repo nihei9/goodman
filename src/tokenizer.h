@@ -11,7 +11,13 @@ typedef enum good_TokenType {
     good_TKN_PRULE_TERMINATOR,
     good_TKN_STRING,
     good_TKN_NEW_LINE,
+    good_TKN_EOF,
 } good_TokenType;
+
+typedef struct good_Position {
+    size_t row;
+    size_t col;
+} good_Position;
 
 typedef struct good_Token {
     good_TokenType type;
@@ -19,10 +25,7 @@ typedef struct good_Token {
         grm_SymbolID symbol_id;
     } value;
 
-    struct {
-        size_t row;
-        size_t col;
-    } pos;
+    good_Position pos;
 } good_Token;
 
 typedef struct good_Tokenizer good_Tokenizer;

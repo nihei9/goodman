@@ -2,6 +2,9 @@
 #include <stdlib.h>
 
 static const good_Token *good_tokenize(good_Tokenizer *tknzr);
+inline static int good_get_char(good_Tokenizer *tknzr);
+inline static void good_unget_char(good_Tokenizer *tknzr);
+inline static good_Position good_get_position(const good_Tokenizer *tknzr);
 static int good_is_name_letter(int c);
 
 #define TOKENIZER_STR_LEN 1024
@@ -9,10 +12,13 @@ static int good_is_name_letter(int c);
 struct good_Tokenizer {
     FILE *target;
 
-    struct {
-        size_t row;
-        size_t col;
-    } pos;
+    int next_char;
+    int latest_char;
+    int pre_char;
+
+    good_Position next_pos;
+    good_Position latest_pos;
+    good_Position pre_pos;
 
     struct {
         char *str;
@@ -43,8 +49,15 @@ good_Tokenizer *good_new_tokenizer(FILE *target)
         goto FAILURE;
     }
     tknzr->target = target;
-    tknzr->pos.row = 0;
-    tknzr->pos.col = 0;
+    tknzr->next_char = 'g'; // EOF以外なら何でもいい
+    tknzr->latest_char = 'g';
+    tknzr->pre_char = 'g';
+    tknzr->next_pos.row = 0;
+    tknzr->next_pos.col = 0;
+    tknzr->latest_pos.row = 0;
+    tknzr->latest_pos.col = 0;
+    tknzr->pre_pos.row = 0;
+    tknzr->pre_pos.col = 0;
     tknzr->work.str = str;
     tknzr->work.str_len = TOKENIZER_STR_LEN;
     tknzr->symtbl = symtbl;
@@ -83,48 +96,27 @@ static const good_Token *good_tokenize(good_Tokenizer *tknzr)
     good_Token tkn;
     int c;
 
-    c = fgetc(tknzr->target);
-    if (c == EOF) {
-        return NULL;
+    if (tknzr->tkn.type == good_TKN_EOF) {
+        return &tknzr->tkn;
     }
-    tknzr->pos.col++;
+
+    c = good_get_char(tknzr);
 
     if (c == ' ' || c == '\t') {
-        do {
-            tknzr->pos.col++;
-        } while ((c = fgetc(tknzr->target)) == ' ' || c == '\t');
-        
-        if (c == EOF) {
-            return NULL;
-        }
+        c = good_get_char(tknzr);
     }
 
-    tkn.pos.row = tknzr->pos.row;
-    tkn.pos.col = tknzr->pos.col;
+    tkn.pos = good_get_position(tknzr);
 
-    if (c == '\n') {
-        tknzr->pos.row++;
-        tknzr->pos.col = 0;
-
-        while ((c = fgetc(tknzr->target)) == '\n') {
-            tknzr->pos.row++;
-        }
-        ungetc(c, tknzr->target);
-
-        tkn.type = good_TKN_NEW_LINE;
-
-        goto RETURN;
-    }
     if (good_is_name_letter(c)) {
         const grm_SymbolID *id;
         size_t i = 0;
 
         do {
             tknzr->work.str[i++] = c;
-            tknzr->pos.col++;
-        } while (good_is_name_letter((c = fgetc(tknzr->target))));
-        ungetc(c, tknzr->target);
-        tknzr->pos.col--;
+            c = good_get_char(tknzr);
+        } while (good_is_name_letter(c));
+        good_unget_char(tknzr);
         tknzr->work.str[i] = '\0';
 
         // 第３引数はtokenizerにおいては使用しないので、何を設定しても無関係。
@@ -159,10 +151,9 @@ static const good_Token *good_tokenize(good_Tokenizer *tknzr)
 
         do {
             tknzr->work.str[i++] = c;
-            tknzr->pos.col++;
-        } while ((c = fgetc(tknzr->target)) != '\'');
-        ungetc(c, tknzr->target);
-        tknzr->pos.col--;
+            c = good_get_char(tknzr);
+        } while (c != '\'');
+        good_unget_char(tknzr);
         tknzr->work.str[i] = '\0';
 
         // 第３引数はtokenizerにおいては使用しないので、何を設定しても無関係。
@@ -176,12 +167,80 @@ static const good_Token *good_tokenize(good_Tokenizer *tknzr)
 
         goto RETURN;
     }
+    if (c == '#') {
+        do {
+            c = good_get_char(tknzr);
+        } while (c != '\n' || c != EOF);
+        good_unget_char(tknzr);
+    }
+    if (c == '\n') {
+        tkn.type = good_TKN_NEW_LINE;
+
+        goto RETURN;
+    }
+    if (c == EOF) {
+        tkn.type = good_TKN_EOF;
+
+        goto RETURN;
+    }
 
 RETURN:
 
     tknzr->tkn = tkn;
 
     return &tknzr->tkn;
+}
+
+inline static int good_get_char(good_Tokenizer *tknzr)
+{
+    if (tknzr->latest_char == EOF) {
+        return EOF;
+    }
+
+    tknzr->pre_char = tknzr->latest_char;
+    tknzr->pre_pos = tknzr->latest_pos;
+
+    tknzr->latest_char = tknzr->next_char;
+    tknzr->latest_pos = tknzr->next_pos;
+
+    if (tknzr->pre_char == '\n') {
+        tknzr->latest_pos.row++;
+        tknzr->latest_pos.col = 0;
+    }
+
+    tknzr->next_pos = tknzr->latest_pos;
+
+    tknzr->next_char = fgetc(tknzr->target);
+    tknzr->next_pos.row++;
+
+    if (tknzr->next_char == ' ' || tknzr->next_char == '\t') {
+        int c;
+
+        do {
+            c = fgetc(tknzr->target);
+            tknzr->next_pos.col++;
+        } while (tknzr->next_char == ' ' || tknzr->next_char == '\t');
+        ungetc(c, tknzr->target);
+        tknzr->next_pos.row--;
+    }
+
+    return tknzr->latest_char;
+}
+
+// good_unget_char()を呼ぶ前に必ずgood_get_char()を1回以上呼んでいること。
+// good_unget_char()を2回以上連続して呼ばないこと。
+inline static void good_unget_char(good_Tokenizer *tknzr)
+{
+    tknzr->next_char = tknzr->latest_char;
+    tknzr->next_pos = tknzr->latest_pos;
+
+    tknzr->latest_char = tknzr->pre_char;
+    tknzr->latest_pos = tknzr->pre_pos;
+}
+
+inline static good_Position good_get_position(const good_Tokenizer *tknzr)
+{
+    return tknzr->latest_pos;
 }
 
 static int good_is_name_letter(int c)

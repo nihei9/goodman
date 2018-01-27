@@ -6,15 +6,16 @@
 
 typedef enum good_TokenType {
     good_TKN_NAME,
+    good_TKN_PRULE_LEADER,
+    good_TKN_PRULE_OR,
+    good_TKN_PRULE_TERMINATOR,
     good_TKN_STRING,
-    good_TKN_INDENT,
     good_TKN_NEW_LINE,
 } good_TokenType;
 
 typedef struct good_Token {
     good_TokenType type;
     union {
-        unsigned int uint_value;
         grm_SymbolID symbol_id;
     } value;
 

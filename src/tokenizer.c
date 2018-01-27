@@ -89,10 +89,10 @@ static const good_Token *good_tokenize(good_Tokenizer *tknzr)
     }
     tknzr->pos.col++;
 
-    if (c == ' ') {
+    if (c == ' ' || c == '\t') {
         do {
             tknzr->pos.col++;
-        } while ((c = fgetc(tknzr->target)) == ' ');
+        } while ((c = fgetc(tknzr->target)) == ' ' || c == '\t');
         
         if (c == EOF) {
             return NULL;
@@ -102,20 +102,6 @@ static const good_Token *good_tokenize(good_Tokenizer *tknzr)
     tkn.pos.row = tknzr->pos.row;
     tkn.pos.col = tknzr->pos.col;
 
-    if (c == '\t') {
-        unsigned int level = 1;
-
-        while ((c = fgetc(tknzr->target)) == '\t') {
-            tknzr->pos.row++;
-            level++;
-        }
-        ungetc(c, tknzr->target);
-
-        tkn.type = good_TKN_INDENT;
-        tkn.value.uint_value = level;
-
-        goto RETURN;
-    }
     if (c == '\n') {
         tknzr->pos.row++;
         tknzr->pos.col = 0;
@@ -149,6 +135,21 @@ static const good_Token *good_tokenize(good_Tokenizer *tknzr)
 
         tkn.type = good_TKN_NAME;
         tkn.value.symbol_id = *id;
+
+        goto RETURN;
+    }
+    if (c == ':') {
+        tkn.type = good_TKN_PRULE_LEADER;
+
+        goto RETURN;
+    }
+    if (c == '|') {
+        tkn.type = good_TKN_PRULE_OR;
+
+        goto RETURN;
+    }
+    if (c == ';') {
+        tkn.type = good_TKN_PRULE_TERMINATOR;
 
         goto RETURN;
     }

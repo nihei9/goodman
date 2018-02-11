@@ -415,5 +415,14 @@ void test_1(connie_Connie *c)
         A_EQL_ULONG(c, 5, tkn->pos.col);
     }
 
+    // EOF
+    tkn = good_consume_token(tknzr);
+    A_NOT_NULL(c, tkn);
+    if (tkn != NULL) {
+        A_EQL_INT(c, good_TKN_EOF, tkn->type);
+        A_EQL_ULONG(c, 16, tkn->pos.row);
+        A_EQL_ULONG(c, 0, tkn->pos.col);
+    }
+
     good_delete_tokenizer(tknzr);
 }

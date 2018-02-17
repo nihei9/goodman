@@ -19,13 +19,17 @@ int main (void)
 void test_1(connie_Connie *c)
 {
     good_Tokenizer *tknzr;
+    grm_SymbolTable *symtbl;
     const good_Token *tkn;
     FILE *target;
 
     target = fopen("test/data/test.goodman", "r");
     A_NOT_NULL(c, target);
 
-    tknzr = good_new_tokenizer(target);
+    symtbl = grm_new_symtbl();
+    A_NOT_NULL(c, symtbl);
+
+    tknzr = good_new_tokenizer(target, symtbl);
     A_NOT_NULL(c, tknzr);
 
     // E

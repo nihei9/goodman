@@ -35,11 +35,10 @@ struct good_Tokenizer {
     grm_SymbolTable *symtbl;
 };
 
-good_Tokenizer *good_new_tokenizer(FILE *target)
+good_Tokenizer *good_new_tokenizer(FILE *target, grm_SymbolTable *symtbl)
 {
     good_Tokenizer *tknzr = NULL;
     char *str = NULL;
-    grm_SymbolTable *symtbl = NULL;
 
     tknzr = (good_Tokenizer *) malloc(sizeof (good_Tokenizer));
     if (tknzr == NULL) {
@@ -47,10 +46,6 @@ good_Tokenizer *good_new_tokenizer(FILE *target)
     }
     str = (char *) calloc(TOKENIZER_STR_LEN, sizeof (char));
     if (str == NULL) {
-        goto FAILURE;
-    }
-    symtbl = grm_new_symtbl();
-    if (symtbl == NULL) {
         goto FAILURE;
     }
     tknzr->target = target;
@@ -72,7 +67,6 @@ good_Tokenizer *good_new_tokenizer(FILE *target)
 FAILURE:
     free(tknzr);
     free(str);
-    grm_delete_symtbl(symtbl);
 
     return NULL;
 }

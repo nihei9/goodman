@@ -13,9 +13,6 @@ struct good_Parser {
     good_Tokenizer *tknzr;
 };
 
-static good_AST *good_new_ast(good_ASTType type, const good_ASTValue *value);
-static good_AST *good_append_child(good_AST *parent, good_AST *child);
-
 good_Parser *good_new_parser(good_Tokenizer *tknzr)
 {
     good_Parser *psr;
@@ -126,46 +123,4 @@ const good_AST *good_parse(good_Parser *psr)
     } while (tkn->type != good_TKN_EOF);
 
     return root_ast;
-}
-
-static good_AST *good_new_ast(good_ASTType type, const good_ASTValue *value)
-{
-    good_AST *ast;
-
-    ast = (good_AST *) malloc(sizeof (good_AST));
-    if (ast == NULL) {
-        return NULL;
-    }
-
-    ast->type = type;
-    if (value != NULL) {
-        ast->value = *value;
-    }
-    ast->brother = NULL;
-    ast->child = NULL;
-
-    return ast;
-}
-
-static good_AST *good_append_child(good_AST *parent, good_AST *child)
-{
-    good_AST *youngest_child;
-
-    if (parent == NULL) {
-        return child;
-    }
-
-    if (parent->child == NULL) {
-        parent->child = child;
-
-        return parent;
-    }
-
-    youngest_child = parent->child;
-    while (youngest_child->brother != NULL) {
-        youngest_child = youngest_child->brother;
-    }
-    youngest_child->brother = child;
-
-    return parent;
 }

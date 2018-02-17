@@ -32,8 +32,9 @@ build $builddir/symbol_table.o: cxx $root/src/symbol_table.c
 build $builddir/first_set.o: cxx $root/src/first_set.c
 build $builddir/follow_set.o: cxx $root/src/follow_set.c
 build $builddir/tokenizer.o: cxx $root/src/tokenizer.c
+build $builddir/ast.o: cxx $root/src/ast.c
 build $builddir/parser.o: cxx $root/src/parser.c
-build $builddir/lib/libgoodman.a: ar $builddir/grammar.o $builddir/symbol_table.o $builddir/production_rule_table.o $builddir/first_set.o $builddir/follow_set.o $builddir/tokenizer.o $builddir/parser.o
+build $builddir/lib/libgoodman.a: ar $builddir/grammar.o $builddir/symbol_table.o $builddir/production_rule_table.o $builddir/first_set.o $builddir/follow_set.o $builddir/tokenizer.o $builddir/ast.o $builddir/parser.o
 build goodman: phony $builddir/lib/libgoodman.a
 
 # test

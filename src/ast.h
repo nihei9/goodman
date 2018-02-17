@@ -21,6 +21,13 @@ typedef struct good_AST {
 
     struct good_AST *brother;
     struct good_AST *child;
+
+    size_t _num_child;
 } good_AST;
+
+good_AST *good_new_ast(good_ASTType type, const good_ASTValue *value);
+void good_delete_ast(good_AST *ast);
+good_AST *good_append_child(good_AST *parent, good_AST *child);
+size_t good_count_child(const good_AST *ast);
 
 #endif

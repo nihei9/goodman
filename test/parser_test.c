@@ -160,6 +160,7 @@ void test_1(connie_Connie *c)
     prule_ast = prule_ast->brother;
     A_NULL(c, prule_ast);
 
+    good_delete_ast((good_AST *) root_ast);
     good_delete_parser(psr);
     good_delete_tokenizer(tknzr);
 }

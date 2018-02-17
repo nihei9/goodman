@@ -32,7 +32,8 @@ build $builddir/symbol_table.o: cxx $root/src/symbol_table.c
 build $builddir/first_set.o: cxx $root/src/first_set.c
 build $builddir/follow_set.o: cxx $root/src/follow_set.c
 build $builddir/tokenizer.o: cxx $root/src/tokenizer.c
-build $builddir/lib/libgoodman.a: ar $builddir/grammar.o $builddir/symbol_table.o $builddir/production_rule_table.o $builddir/first_set.o $builddir/follow_set.o $builddir/tokenizer.o
+build $builddir/parser.o: cxx $root/src/parser.c
+build $builddir/lib/libgoodman.a: ar $builddir/grammar.o $builddir/symbol_table.o $builddir/production_rule_table.o $builddir/first_set.o $builddir/follow_set.o $builddir/tokenizer.o $builddir/parser.o
 build goodman: phony $builddir/lib/libgoodman.a
 
 # test
@@ -61,5 +62,9 @@ build $builddir/tokenizer_test.o: cxx $root/test/tokenizer_test.c
 build $builddir/test/tokenizer_test: link $builddir/tokenizer_test.o | $builddir/lib/libgoodman.a
   libs = -lgoodman -lcollections -lconnie
 
+build $builddir/parser_test.o: cxx $root/test/parser_test.c
+build $builddir/test/parser_test: link $builddir/parser_test.o | $builddir/lib/libgoodman.a
+  libs = -lgoodman -lcollections -lconnie
+
 build test: phony $builddir/test/grammar_test $builddir/test/symbol_table_test $builddir/test/production_rule_table_test $
-  $builddir/test/first_set_test $builddir/test/follow_set_test $builddir/test/tokenizer_test
+  $builddir/test/first_set_test $builddir/test/follow_set_test $builddir/test/tokenizer_test $builddir/test/parser_test

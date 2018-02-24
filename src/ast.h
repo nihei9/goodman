@@ -28,6 +28,7 @@ typedef struct good_AST {
 good_AST *good_new_ast(good_ASTType type, const good_ASTValue *value);
 void good_delete_ast(good_AST *ast);
 good_AST *good_append_child(good_AST *parent, good_AST *child);
+good_AST *good_get_child(const good_AST *ast, size_t offset);
 size_t good_count_child(const good_AST *ast);
 
 #endif

@@ -58,6 +58,23 @@ good_AST *good_append_child(good_AST *parent, good_AST *child)
     return parent;
 }
 
+good_AST *good_get_child(const good_AST *ast, size_t offset)
+{
+    good_AST *child;
+    size_t i;
+
+    child = ast->child;    
+    for (i = 0; i < offset; i++) {
+        child = child->brother;
+
+        if (child == NULL) {
+            return NULL;
+        }
+    }
+
+    return child;
+}
+
 size_t good_count_child(const good_AST *ast)
 {
     return ast->_num_child;

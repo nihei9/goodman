@@ -4,6 +4,19 @@
 #include "ast.h"
 #include "tokenizer.h"
 
+/*
+ * AST構造
+ * 
+ * <good_AST_ROOT>
+ *     +-- <good_AST_PRULE>
+ *     |       +-- <good_AST_LHS>
+ *     |       +-- <good_AST_RHS>
+ *     |       |       +-- <good_AST_RHS_ELEM_STRING | good_AST_RHS_ELEM_SYMBOL>
+ *     |       |       `-- ...
+ *     |       `-- ...
+ *     `-- ...
+ */
+
 typedef struct good_Parser good_Parser;
 
 good_Parser *good_new_parser(good_Tokenizer *tknzr);

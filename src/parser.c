@@ -1,14 +1,6 @@
 #include "parser.h"
 #include <stdlib.h>
 
-typedef struct good_MatchingParams {
-    const good_TokenType *expected_types;
-    size_t expected_types_len;
-    int ast_making;
-    good_ASTType ast_type;
-    int with_value;
-} good_MatchingParams;
-
 struct good_Parser {
     good_Tokenizer *tknzr;
 };
@@ -66,7 +58,7 @@ const good_AST *good_parse(good_Parser *psr)
             }
             good_append_child(root_ast, prule_ast);
             
-            prule_lhs_ast = good_new_ast(good_AST_PRULE_LHS, (good_ASTValue *) tkn);
+            prule_lhs_ast = good_new_ast(good_AST_PRULE_LHS, tkn);
             if (prule_lhs_ast == NULL) {
                 return NULL;
             }
@@ -82,7 +74,7 @@ const good_AST *good_parse(good_Parser *psr)
             }
 
             do {
-                prule_rhs_ast = good_new_ast(good_AST_PRULE_RHS, (good_ASTValue *) tkn);
+                prule_rhs_ast = good_new_ast(good_AST_PRULE_RHS, tkn);
                 if (prule_rhs_ast == NULL) {
                     return NULL;
                 }
@@ -93,7 +85,16 @@ const good_AST *good_parse(good_Parser *psr)
 
                     tkn = good_consume_token(psr->tknzr);
                     if (tkn->type == good_TKN_NAME || tkn->type == good_TKN_STRING) {
-                        prule_rhs_elem_ast = good_new_ast(good_AST_PRULE_RHS_ELEM, (good_ASTValue *) tkn);
+                        good_ASTType type;
+
+                        if (tkn->type == good_TKN_NAME) {
+                            type = good_AST_PRULE_RHS_ELEM_SYMBOL;
+                        }
+                        else {
+                            type = good_AST_PRULE_RHS_ELEM_STRING;
+                        }
+
+                        prule_rhs_elem_ast = good_new_ast(type, tkn);
                         if (prule_rhs_elem_ast == NULL) {
                             return NULL;
                         }

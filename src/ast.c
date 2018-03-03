@@ -1,7 +1,7 @@
 #include "ast.h"
 #include <stdlib.h>
 
-good_AST *good_new_ast(good_ASTType type, const good_ASTValue *value)
+good_AST *good_new_ast(good_ASTType type, const good_Token *token)
 {
     good_AST *ast;
 
@@ -11,8 +11,8 @@ good_AST *good_new_ast(good_ASTType type, const good_ASTValue *value)
     }
 
     ast->type = type;
-    if (value != NULL) {
-        ast->value = *value;
+    if (token != NULL) {
+        ast->token = *token;
     }
     ast->parent = NULL;
     ast->brother = NULL;

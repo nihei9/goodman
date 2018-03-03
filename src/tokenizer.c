@@ -80,7 +80,6 @@ void good_delete_tokenizer(good_Tokenizer *tknzr)
     tknzr->target = NULL;
     free(tknzr->work.str);
     tknzr->work.str = NULL;
-    grm_delete_symtbl(tknzr->symtbl);
     tknzr->symtbl = NULL;
     free(tknzr);
 }

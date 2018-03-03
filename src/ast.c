@@ -14,6 +14,7 @@ good_AST *good_new_ast(good_ASTType type, const good_ASTValue *value)
     if (value != NULL) {
         ast->value = *value;
     }
+    ast->parent = NULL;
     ast->brother = NULL;
     ast->child = NULL;
     ast->_num_child = 0;
@@ -41,7 +42,12 @@ good_AST *good_append_child(good_AST *parent, good_AST *child)
         return child;
     }
 
+    if (child == NULL) {
+        return parent;
+    }
+
     if (parent->child == NULL) {
+        child->parent = parent;
         parent->child = child;
         parent->_num_child++;
 
@@ -52,6 +58,7 @@ good_AST *good_append_child(good_AST *parent, good_AST *child)
     while (youngest_child->brother != NULL) {
         youngest_child = youngest_child->brother;
     }
+    child->parent = parent;
     youngest_child->brother = child;
     parent->_num_child++;
 

@@ -19,6 +19,7 @@ typedef struct good_AST {
     good_ASTType type;
     good_ASTValue value;
 
+    struct good_AST *parent;
     struct good_AST *brother;
     struct good_AST *child;
 

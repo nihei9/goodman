@@ -60,6 +60,8 @@ void grm_delete_symtbl(grm_SymbolTable *symtbl)
 		return;
 	}
 
+	// TODO grm_put_in_symtbl()内で生成したシンボルの複製の解放処理を実装する。
+
 	hmap_delete(symtbl->sym2id_map);
 	symtbl->sym2id_map = NULL;
 	hmap_delete(symtbl->id2sym_map);
@@ -75,6 +77,7 @@ void grm_delete_symtbl(grm_SymbolTable *symtbl)
  */
 const grm_SymbolID *grm_put_in_symtbl(grm_SymbolTable *symtbl, const char *symbol, grm_SymbolType type)
 {
+	const char *dup_sym;
 	const grm_SymbolID *id;
     grm_SymbolID sym_id;
 
@@ -89,15 +92,20 @@ const grm_SymbolID *grm_put_in_symtbl(grm_SymbolTable *symtbl, const char *symbo
 		return &symtbl->ret_id;
 	}
 
+	dup_sym = strdup(symbol);
+	if (dup_sym == NULL) {
+		return NULL;
+	}
+
 	switch (type) {
 	case grm_SYMTYPE_TERMINAL:		sym_id = symtbl->id << 1; break;
 	case grm_SYMTYPE_NON_TERMINAL:	sym_id = (symtbl->id << 1) | 0x1; break;
 	default:						return NULL;
 	}
-	if (hmap_put(symtbl->sym2id_map, &symbol, &sym_id) == NULL) {
+	if (hmap_put(symtbl->sym2id_map, &dup_sym, &sym_id) == NULL) {
 		return NULL;
 	}
-	if (hmap_put(symtbl->id2sym_map, &sym_id, &symbol) == NULL) {
+	if (hmap_put(symtbl->id2sym_map, &sym_id, &dup_sym) == NULL) {
 		return NULL;
 	}
 	

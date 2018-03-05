@@ -4,11 +4,11 @@
 #include "tokenizer.h"
 #include <stdio.h>
 
-static void good_print_grammar(const grm_Grammar *grm);
+static void good_print_grammar(const good_Grammar *grammar);
 
 int main(int argc, const char *argv[])
 {
-    const grm_Grammar *grm = NULL;
+    const good_Grammar *grammar = NULL;
     const good_AST *ast = NULL;
     good_Parser *psr = NULL;
     good_Tokenizer *tknzr = NULL;
@@ -63,18 +63,18 @@ int main(int argc, const char *argv[])
         goto END;
     }
 
-    grm = good_convert_ast_to_grammar(ast, symtbl);
-    if (grm == NULL) {
+    grammar = good_new_grammar_from_ast(ast, symtbl);
+    if (grammar == NULL) {
         printf("Failed to create grammar.\n");
 
         rc = 1;
         goto END;
     }
 
-    good_print_grammar(grm);
+    good_print_grammar(grammar);
 
 END:
-    grm_delete((grm_Grammar *) grm);
+    good_delete_grammar((good_Grammar *) grammar);
     good_delete_ast((good_AST *) ast);
     good_delete_parser(psr);
     good_delete_tokenizer(tknzr);
@@ -84,24 +84,42 @@ END:
     return rc;
 }
 
-static void good_print_grammar(const grm_Grammar *grm)
+static void good_print_grammar(const good_Grammar *grammar)
 {
-    const grm_ProductionRule *prule;
-    grm_ProductionRuleFilter filter;
-    grm_ProductionRuleFilter *f;
+    // 終端記号表示
+    {
+        printf("@terminal-symbol\n");
 
-    f = grm_find_all_prule(grm, &filter);
+        // TODO 実装
+    }
 
-    while ((prule = grm_next_prule(grm, f)) != NULL) {
-        grm_SymbolID lhs = grm_get_pr_lhs(prule);
-        const grm_SymbolID *rhs = grm_get_pr_rhs(prule);
-        size_t rhs_len = grm_get_pr_rhs_len(prule);
-        size_t i;
+    // 生成規則表示
+    {
+        const grm_Grammar *prtbl;
+        const grm_ProductionRule *prule;
+        grm_ProductionRuleFilter filter;
+        grm_ProductionRuleFilter *f;
 
-        printf("%s: \n", grm_lookup_symbol(grm, lhs));
-        for (i = 0; i < rhs_len; i++) {
-            printf(" %s", grm_lookup_symbol(grm, rhs[i]));
+        printf("@production-rule\n");
+
+        prtbl = grammar->prtbl;
+        
+        f = grm_find_all_prule(prtbl, &filter);
+        while ((prule = grm_next_prule(prtbl, f)) != NULL) {
+            grm_SymbolID lhs = grm_get_pr_lhs(prule);
+            const grm_SymbolID *rhs = grm_get_pr_rhs(prule);
+            size_t rhs_len = grm_get_pr_rhs_len(prule);
+            size_t i;
+
+            if (grm_get_symbol_type(lhs) != grm_SYMTYPE_NON_TERMINAL) {
+                continue;
+            }
+
+            printf("%s", grm_lookup_symbol(prtbl, lhs));
+            for (i = 0; i < rhs_len; i++) {
+                printf(" %s", grm_lookup_symbol(prtbl, rhs[i]));
+            }
+            printf("\n");
         }
-        printf(";\n");
     }
 }

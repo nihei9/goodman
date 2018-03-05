@@ -7,19 +7,108 @@
 
 #define MAX_RHS_LEN 1024
 
+static const good_TerminalSymbolTable *good_new_tsymtbl_from_ast(const good_AST *root_ast, const grm_SymbolTable *symtbl);
+static const grm_Grammar *good_new_prtbl_from_ast(const good_AST *root_ast, const grm_SymbolTable *symtbl);
 static int good_is_terminal_symbol_def(const good_AST *prule_ast);
 
-const grm_Grammar *good_convert_ast_to_grammar(const good_AST *root_ast, const grm_SymbolTable *symtbl)
+const good_Grammar *good_new_grammar_from_ast(const good_AST *root_ast, const grm_SymbolTable *symtbl)
 {
-    grm_Grammar *grm = NULL;
+    good_Grammar *grammar = NULL;
+    const good_TerminalSymbolTable *tsymtbl = NULL;
+    const grm_Grammar *prtbl = NULL;
+
+    grammar = (good_Grammar *) malloc(sizeof (good_Grammar));
+    if (grammar == NULL) {
+        goto FAILURE;
+    }
+
+    tsymtbl = good_new_tsymtbl_from_ast(root_ast, symtbl);
+    if (tsymtbl == NULL) {
+        goto FAILURE;
+    }
+
+    prtbl = good_new_prtbl_from_ast(root_ast, symtbl);
+    if (prtbl == NULL) {
+        goto FAILURE;
+    }
+
+    grammar->tsymtbl = tsymtbl;
+    grammar->prtbl = prtbl;
+
+    return grammar;
+
+FAILURE:
+    free(grammar);
+    good_delete_tsymtbl((good_TerminalSymbolTable *) tsymtbl);
+    grm_delete((grm_Grammar *) prtbl);
+
+    return NULL;
+}
+
+static const good_TerminalSymbolTable *good_new_tsymtbl_from_ast(const good_AST *root_ast, const grm_SymbolTable *symtbl)
+{
+    good_TerminalSymbolTable *tsymtbl = NULL;
     const good_AST *prule_ast;
 
-    grm = grm_new();
-    if (grm == NULL) {
+    tsymtbl = good_new_tsymtbl();
+    if (tsymtbl == NULL) {
+        goto FAILURE;
+    }
+
+    for (prule_ast = good_get_child(root_ast, PRULE_OFFSET); prule_ast != NULL; prule_ast = prule_ast->brother) {
+        const good_AST *lhs_ast;
+        const good_AST *rhs_ast;
+
+        if (good_is_terminal_symbol_def(prule_ast) != 0) {
+            continue;
+        }
+
+        lhs_ast = good_get_child(prule_ast, LHS_OFFSET);
+        if (lhs_ast == NULL) {
+            goto FAILURE;
+        }
+
+        for (rhs_ast = good_get_child(prule_ast, RHS_OFFSET); rhs_ast != NULL; rhs_ast = rhs_ast->brother) {
+            const good_AST *rhs_elem_ast;
+            const char *rhs_elem_str;
+            int ret;
+
+            rhs_elem_ast = good_get_child(rhs_ast, RHS_ELEM_OFFSET);
+            if (rhs_elem_ast == NULL) {
+                goto FAILURE;
+            }
+
+            rhs_elem_str = grm_lookup_in_symtbl(symtbl, rhs_elem_ast->token.value.symbol_id);
+            if (rhs_elem_str == NULL) {
+                goto FAILURE;
+            }
+
+            ret = good_put_tsym(tsymtbl, lhs_ast->token.value.symbol_id, rhs_elem_str);
+            if (ret != 0) {
+                goto FAILURE;
+            }
+        }
+    }
+
+    return tsymtbl;
+
+FAILURE:
+    good_delete_tsymtbl(tsymtbl);
+
+    return NULL;
+}
+
+static const grm_Grammar *good_new_prtbl_from_ast(const good_AST *root_ast, const grm_SymbolTable *symtbl)
+{
+    grm_Grammar *prtbl = NULL;
+    const good_AST *prule_ast;
+
+    prtbl = grm_new();
+    if (prtbl == NULL) {
         goto FAILURE;
     }
     
-    grm_set_default_symbol_type(grm, grm_SYMTYPE_TERMINAL);
+    grm_set_default_symbol_type(prtbl, grm_SYMTYPE_TERMINAL);
 
     /*
      * 生成規則の左辺値を非終端記号として登録する。
@@ -29,10 +118,6 @@ const grm_Grammar *good_convert_ast_to_grammar(const good_AST *root_ast, const g
     for (prule_ast = good_get_child(root_ast, PRULE_OFFSET); prule_ast != NULL; prule_ast = prule_ast->brother) {
         const good_AST *lhs_ast;
         const char *lhs_str;
-
-        if (prule_ast->type != good_AST_PRULE) {
-            continue;
-        }
 
         if (good_is_terminal_symbol_def(prule_ast) != 0) {
             continue;
@@ -47,7 +132,7 @@ const grm_Grammar *good_convert_ast_to_grammar(const good_AST *root_ast, const g
             goto FAILURE;
         }
 
-        grm_put_symbol_as(grm, lhs_str, grm_SYMTYPE_NON_TERMINAL);
+        grm_put_symbol_as(prtbl, lhs_str, grm_SYMTYPE_NON_TERMINAL);
     }
 
     /*
@@ -92,29 +177,46 @@ const grm_Grammar *good_convert_ast_to_grammar(const good_AST *root_ast, const g
                     goto FAILURE;
                 }
 
-                grm_put_symbol(grm, rhs_elem_str);
+                grm_put_symbol(prtbl, rhs_elem_str);
 
                 rhs_elem_str_arr[rhs_len++] = rhs_elem_str;
             }
 
-            ret = grm_append_prule(grm, lhs_str, rhs_elem_str_arr, rhs_len);
+            ret = grm_append_prule(prtbl, lhs_str, rhs_elem_str_arr, rhs_len);
             if (ret != 0) {
                 goto FAILURE;
             }
         }
     }
 
-    return grm;
+    return prtbl;
 
 FAILURE:
-    grm_delete(grm);
+    grm_delete(prtbl);
 
     return NULL;
+}
+
+void good_delete_grammar(good_Grammar *grammar)
+{
+    if (grammar == NULL) {
+        return;
+    }
+
+    good_delete_tsymtbl((good_TerminalSymbolTable *) grammar->tsymtbl);
+    grammar->tsymtbl = NULL;
+    grm_delete((grm_Grammar *) grammar->prtbl);
+    grammar->prtbl = NULL;
+    free(grammar);
 }
 
 static int good_is_terminal_symbol_def(const good_AST *prule_ast)
 {
     const good_AST *rhs_ast;
+
+    if (prule_ast->type != good_AST_PRULE) {
+        return 0;
+    }
 
     // 全ての生成規則の右辺値が1つの要素のみで構成されており、かつその要素が文字列の場合は、
     // その生成規則の左辺値の記号は終端記号と判定する。

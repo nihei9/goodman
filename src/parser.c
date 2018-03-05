@@ -50,7 +50,6 @@ const good_AST *good_parse(good_Parser *psr)
         if (tkn->type == good_TKN_NAME) {
             good_AST *prule_ast;
             good_AST *prule_lhs_ast;
-            good_AST *prule_rhs_ast;
 
             prule_ast = good_new_ast(good_AST_PRULE, NULL);
             if (prule_ast == NULL) {
@@ -74,7 +73,9 @@ const good_AST *good_parse(good_Parser *psr)
             }
 
             do {
-                prule_rhs_ast = good_new_ast(good_AST_PRULE_RHS, tkn);
+                good_AST *prule_rhs_ast;
+
+                prule_rhs_ast = good_new_ast(good_AST_PRULE_RHS, NULL);
                 if (prule_rhs_ast == NULL) {
                     return NULL;
                 }

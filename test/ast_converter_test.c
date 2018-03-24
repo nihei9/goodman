@@ -19,7 +19,7 @@ int main (void)
 
 void test_1(connie_Connie *c)
 {
-    const grm_Grammar *grm;
+    const good_Grammar *grm;
     good_Parser *psr;
     good_Tokenizer *tknzr;
     grm_SymbolTable *symtbl;
@@ -41,7 +41,7 @@ void test_1(connie_Connie *c)
     ast = good_parse(psr);
     A_NOT_NULL(c, ast);
 
-    grm = good_convert_ast_to_grammar(ast, symtbl);
+    grm = good_new_grammar_from_ast(ast, symtbl);
     A_NOT_NULL(c, grm);
 
     good_delete_ast((good_AST *) ast);

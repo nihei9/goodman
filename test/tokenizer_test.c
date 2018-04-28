@@ -19,13 +19,17 @@ int main (void)
 void test_1(connie_Connie *c)
 {
     good_Tokenizer *tknzr;
+    grm_SymbolTable *symtbl;
     const good_Token *tkn;
     FILE *target;
 
     target = fopen("test/data/test.goodman", "r");
     A_NOT_NULL(c, target);
 
-    tknzr = good_new_tokenizer(target);
+    symtbl = grm_new_symtbl();
+    A_NOT_NULL(c, symtbl);
+
+    tknzr = good_new_tokenizer(target, symtbl);
     A_NOT_NULL(c, tknzr);
 
     // E
@@ -33,6 +37,7 @@ void test_1(connie_Connie *c)
     A_NOT_NULL(c, tkn);
     if (tkn != NULL) {
         A_EQL_INT(c, good_TKN_NAME, tkn->type);
+        A_EQL_STRING(c, "E", grm_lookup_in_symtbl(symtbl, tkn->value.symbol_id));
         A_EQL_ULONG(c, 0, tkn->pos.row);
         A_EQL_ULONG(c, 0, tkn->pos.col);
     }
@@ -60,6 +65,7 @@ void test_1(connie_Connie *c)
     A_NOT_NULL(c, tkn);
     if (tkn != NULL) {
         A_EQL_INT(c, good_TKN_NAME, tkn->type);
+        A_EQL_STRING(c, "E", grm_lookup_in_symtbl(symtbl, tkn->value.symbol_id));
         A_EQL_ULONG(c, 1, tkn->pos.row);
         A_EQL_ULONG(c, 6, tkn->pos.col);
     }
@@ -78,6 +84,7 @@ void test_1(connie_Connie *c)
     A_NOT_NULL(c, tkn);
     if (tkn != NULL) {
         A_EQL_INT(c, good_TKN_NAME, tkn->type);
+        A_EQL_STRING(c, "T", grm_lookup_in_symtbl(symtbl, tkn->value.symbol_id));
         A_EQL_ULONG(c, 1, tkn->pos.row);
         A_EQL_ULONG(c, 12, tkn->pos.col);
     }
@@ -105,6 +112,7 @@ void test_1(connie_Connie *c)
     A_NOT_NULL(c, tkn);
     if (tkn != NULL) {
         A_EQL_INT(c, good_TKN_NAME, tkn->type);
+        A_EQL_STRING(c, "T", grm_lookup_in_symtbl(symtbl, tkn->value.symbol_id));
         A_EQL_ULONG(c, 2, tkn->pos.row);
         A_EQL_ULONG(c, 6, tkn->pos.col);
     }
@@ -141,6 +149,7 @@ void test_1(connie_Connie *c)
     A_NOT_NULL(c, tkn);
     if (tkn != NULL) {
         A_EQL_INT(c, good_TKN_NAME, tkn->type);
+        A_EQL_STRING(c, "T", grm_lookup_in_symtbl(symtbl, tkn->value.symbol_id));
         A_EQL_ULONG(c, 4, tkn->pos.row);
         A_EQL_ULONG(c, 0, tkn->pos.col);
     }
@@ -168,6 +177,7 @@ void test_1(connie_Connie *c)
     A_NOT_NULL(c, tkn);
     if (tkn != NULL) {
         A_EQL_INT(c, good_TKN_NAME, tkn->type);
+        A_EQL_STRING(c, "T", grm_lookup_in_symtbl(symtbl, tkn->value.symbol_id));
         A_EQL_ULONG(c, 5, tkn->pos.row);
         A_EQL_ULONG(c, 6, tkn->pos.col);
     }
@@ -177,6 +187,7 @@ void test_1(connie_Connie *c)
     A_NOT_NULL(c, tkn);
     if (tkn != NULL) {
         A_EQL_INT(c, good_TKN_STRING, tkn->type);
+        A_EQL_STRING(c, "*", grm_lookup_in_symtbl(symtbl, tkn->value.symbol_id));
         A_EQL_ULONG(c, 5, tkn->pos.row);
         A_EQL_ULONG(c, 8, tkn->pos.col);
     }
@@ -186,6 +197,7 @@ void test_1(connie_Connie *c)
     A_NOT_NULL(c, tkn);
     if (tkn != NULL) {
         A_EQL_INT(c, good_TKN_NAME, tkn->type);
+        A_EQL_STRING(c, "F", grm_lookup_in_symtbl(symtbl, tkn->value.symbol_id));
         A_EQL_ULONG(c, 5, tkn->pos.row);
         A_EQL_ULONG(c, 12, tkn->pos.col);
     }
@@ -213,6 +225,7 @@ void test_1(connie_Connie *c)
     A_NOT_NULL(c, tkn);
     if (tkn != NULL) {
         A_EQL_INT(c, good_TKN_NAME, tkn->type);
+        A_EQL_STRING(c, "F", grm_lookup_in_symtbl(symtbl, tkn->value.symbol_id));
         A_EQL_ULONG(c, 6, tkn->pos.row);
         A_EQL_ULONG(c, 6, tkn->pos.col);
     }
@@ -249,6 +262,7 @@ void test_1(connie_Connie *c)
     A_NOT_NULL(c, tkn);
     if (tkn != NULL) {
         A_EQL_INT(c, good_TKN_NAME, tkn->type);
+        A_EQL_STRING(c, "F", grm_lookup_in_symtbl(symtbl, tkn->value.symbol_id));
         A_EQL_ULONG(c, 8, tkn->pos.row);
         A_EQL_ULONG(c, 0, tkn->pos.col);
     }
@@ -276,6 +290,7 @@ void test_1(connie_Connie *c)
     A_NOT_NULL(c, tkn);
     if (tkn != NULL) {
         A_EQL_INT(c, good_TKN_STRING, tkn->type);
+        A_EQL_STRING(c, "(", grm_lookup_in_symtbl(symtbl, tkn->value.symbol_id));
         A_EQL_ULONG(c, 9, tkn->pos.row);
         A_EQL_ULONG(c, 6, tkn->pos.col);
     }
@@ -285,6 +300,7 @@ void test_1(connie_Connie *c)
     A_NOT_NULL(c, tkn);
     if (tkn != NULL) {
         A_EQL_INT(c, good_TKN_NAME, tkn->type);
+        A_EQL_STRING(c, "E", grm_lookup_in_symtbl(symtbl, tkn->value.symbol_id));
         A_EQL_ULONG(c, 9, tkn->pos.row);
         A_EQL_ULONG(c, 10, tkn->pos.col);
     }
@@ -294,6 +310,7 @@ void test_1(connie_Connie *c)
     A_NOT_NULL(c, tkn);
     if (tkn != NULL) {
         A_EQL_INT(c, good_TKN_STRING, tkn->type);
+        A_EQL_STRING(c, ")", grm_lookup_in_symtbl(symtbl, tkn->value.symbol_id));
         A_EQL_ULONG(c, 9, tkn->pos.row);
         A_EQL_ULONG(c, 12, tkn->pos.col);
     }
@@ -321,6 +338,7 @@ void test_1(connie_Connie *c)
     A_NOT_NULL(c, tkn);
     if (tkn != NULL) {
         A_EQL_INT(c, good_TKN_NAME, tkn->type);
+        A_EQL_STRING(c, "id", grm_lookup_in_symtbl(symtbl, tkn->value.symbol_id));
         A_EQL_ULONG(c, 10, tkn->pos.row);
         A_EQL_ULONG(c, 6, tkn->pos.col);
     }
@@ -357,6 +375,7 @@ void test_1(connie_Connie *c)
     A_NOT_NULL(c, tkn);
     if (tkn != NULL) {
         A_EQL_INT(c, good_TKN_NAME, tkn->type);
+        A_EQL_STRING(c, "id", grm_lookup_in_symtbl(symtbl, tkn->value.symbol_id));
         A_EQL_ULONG(c, 13, tkn->pos.row);
         A_EQL_ULONG(c, 0, tkn->pos.col);
     }
@@ -384,6 +403,7 @@ void test_1(connie_Connie *c)
     A_NOT_NULL(c, tkn);
     if (tkn != NULL) {
         A_EQL_INT(c, good_TKN_STRING, tkn->type);
+        A_EQL_STRING(c, "[a-zA-Z_][a-zA-Z0-9_]*", grm_lookup_in_symtbl(symtbl, tkn->value.symbol_id));
         A_EQL_ULONG(c, 14, tkn->pos.row);
         A_EQL_ULONG(c, 6, tkn->pos.col);
     }

@@ -1,20 +1,9 @@
 #include "parser.h"
 #include <stdlib.h>
 
-typedef struct good_MatchingParams {
-    const good_TokenType *expected_types;
-    size_t expected_types_len;
-    int ast_making;
-    good_ASTType ast_type;
-    int with_value;
-} good_MatchingParams;
-
 struct good_Parser {
     good_Tokenizer *tknzr;
 };
-
-static good_AST *good_new_ast(good_ASTType type, const good_ASTValue *value);
-static good_AST *good_append_child(good_AST *parent, good_AST *child);
 
 good_Parser *good_new_parser(good_Tokenizer *tknzr)
 {
@@ -61,7 +50,6 @@ const good_AST *good_parse(good_Parser *psr)
         if (tkn->type == good_TKN_NAME) {
             good_AST *prule_ast;
             good_AST *prule_lhs_ast;
-            good_AST *prule_rhs_ast;
 
             prule_ast = good_new_ast(good_AST_PRULE, NULL);
             if (prule_ast == NULL) {
@@ -69,7 +57,7 @@ const good_AST *good_parse(good_Parser *psr)
             }
             good_append_child(root_ast, prule_ast);
             
-            prule_lhs_ast = good_new_ast(good_AST_PRULE_LHS, (good_ASTValue *) tkn);
+            prule_lhs_ast = good_new_ast(good_AST_PRULE_LHS, tkn);
             if (prule_lhs_ast == NULL) {
                 return NULL;
             }
@@ -85,7 +73,9 @@ const good_AST *good_parse(good_Parser *psr)
             }
 
             do {
-                prule_rhs_ast = good_new_ast(good_AST_PRULE_RHS, (good_ASTValue *) tkn);
+                good_AST *prule_rhs_ast;
+
+                prule_rhs_ast = good_new_ast(good_AST_PRULE_RHS, NULL);
                 if (prule_rhs_ast == NULL) {
                     return NULL;
                 }
@@ -96,7 +86,16 @@ const good_AST *good_parse(good_Parser *psr)
 
                     tkn = good_consume_token(psr->tknzr);
                     if (tkn->type == good_TKN_NAME || tkn->type == good_TKN_STRING) {
-                        prule_rhs_elem_ast = good_new_ast(good_AST_PRULE_RHS_ELEM, (good_ASTValue *) tkn);
+                        good_ASTType type;
+
+                        if (tkn->type == good_TKN_NAME) {
+                            type = good_AST_PRULE_RHS_ELEM_SYMBOL;
+                        }
+                        else {
+                            type = good_AST_PRULE_RHS_ELEM_STRING;
+                        }
+
+                        prule_rhs_elem_ast = good_new_ast(type, tkn);
                         if (prule_rhs_elem_ast == NULL) {
                             return NULL;
                         }
@@ -126,46 +125,4 @@ const good_AST *good_parse(good_Parser *psr)
     } while (tkn->type != good_TKN_EOF);
 
     return root_ast;
-}
-
-static good_AST *good_new_ast(good_ASTType type, const good_ASTValue *value)
-{
-    good_AST *ast;
-
-    ast = (good_AST *) malloc(sizeof (good_AST));
-    if (ast == NULL) {
-        return NULL;
-    }
-
-    ast->type = type;
-    if (value != NULL) {
-        ast->value = *value;
-    }
-    ast->brother = NULL;
-    ast->child = NULL;
-
-    return ast;
-}
-
-static good_AST *good_append_child(good_AST *parent, good_AST *child)
-{
-    good_AST *youngest_child;
-
-    if (parent == NULL) {
-        return child;
-    }
-
-    if (parent->child == NULL) {
-        parent->child = child;
-
-        return parent;
-    }
-
-    youngest_child = parent->child;
-    while (youngest_child->brother != NULL) {
-        youngest_child = youngest_child->brother;
-    }
-    youngest_child->brother = child;
-
-    return parent;
 }

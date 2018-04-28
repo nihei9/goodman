@@ -80,8 +80,6 @@ static int grm_match_pr_by_lhs(unsigned int index, const void *elem, c_TypeUnion
 	const grm_ProductionRule *pr = (const grm_ProductionRule *) elem;
 	grm_SymbolID expected = cond.t_ulong;
 
-	// printf("[grm_match_pr_by_lhs] index: %u, pr->is_empty: %d, pr->lhs: %lu\n", index, pr->is_empty, pr->lhs);
-
 	if (pr->is_empty == 1) {
 		return 0;
 	}
@@ -170,10 +168,6 @@ int grm_append_to_prtbl(grm_ProductionRuleTable *prtbl, grm_SymbolID lhs, const 
 	pr.rhs_len = rhs_len;
 	pr.is_empty = 0;
 
-	// printf("[grm_append_to_prtbl] lhs: %lu, rhs: %p, rhs_len: %lu\n", lhs, rhs, rhs_len);
-	// printf("[grm_append_to_prtbl] pr.id: %u, pr.lhs: %lu, pr.rhs: %p, pr.rhs_len: %lu, prtbl->fill_index: %lu\n",
-	// 		pr.id, pr.lhs, pr.rhs, pr.rhs_len, prtbl->fill_index);
-
 	arr_set(prtbl->prs, prtbl->fill_index, &pr);
 	prtbl->fill_index++;
 	
@@ -201,8 +195,6 @@ grm_ProductionRuleFilter *grm_set_pr_filter_by_lhs(grm_ProductionRuleFilter *fil
 {
 	arr_Filter *f;
 
-	// printf("[grm_set_pr_filter_by_lhs] lhs: %lu\n", lhs);
-
 	f = arr_set_filter(&filter->prs_filter, grm_match_pr_by_lhs, (c_TypeUnion) (unsigned long) lhs);
 	if (f == NULL) {
 		return NULL;
@@ -225,7 +217,5 @@ grm_ProductionRuleFilter *grm_set_pr_filter_match_all(grm_ProductionRuleFilter *
 
 const grm_ProductionRule *grm_next_pr(grm_ProductionRuleFilter *filter, const grm_ProductionRuleTable *prtbl)
 {
-	// printf("[grm_next_pr] prs_matcher: %p, prs_filter.cond: %lu, prs_filter.index: %u\n", filter->prs_filter.matcher, filter->prs_filter.cond, filter->prs_filter.index);
-
 	return (const grm_ProductionRule *) arr_next(&filter->prs_filter, prtbl->prs);
 }

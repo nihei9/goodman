@@ -79,7 +79,9 @@ END:
     good_delete_parser(psr);
     good_delete_tokenizer(tknzr);
     grm_delete_symtbl(symtbl);
-    fclose(target);
+    if (target != NULL) {
+        fclose(target);
+    }
     
     return rc;
 }
@@ -88,9 +90,26 @@ static void good_print_grammar(const good_Grammar *grammar)
 {
     // 終端記号表示
     {
+        const grm_Grammar *prtbl;
+        const grm_ProductionRule *prule;
+        grm_ProductionRuleFilter filter;
+        grm_ProductionRuleFilter *f;
+
         printf("@terminal-symbol\n");
 
-        // TODO 実装
+        prtbl = grammar->prtbl;
+        
+        f = grm_find_all_prule(prtbl, &filter);
+        while ((prule = grm_next_prule(prtbl, f)) != NULL) {
+            grm_SymbolID lhs = grm_get_pr_lhs(prule);
+            const grm_SymbolID *rhs = grm_get_pr_rhs(prule);
+
+            if (grm_get_symbol_type(lhs) != grm_SYMTYPE_TERMINAL) {
+                continue;
+            }
+
+            printf("%s %s\n", grm_lookup_symbol(prtbl, lhs), grm_lookup_symbol(prtbl, rhs[0]));
+        }
     }
 
     // 生成規則表示

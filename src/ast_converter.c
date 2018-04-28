@@ -1,9 +1,5 @@
 #include "ast_converter.h"
-
-#define PRULE_OFFSET 0
-#define LHS_OFFSET 0
-#define RHS_OFFSET 1
-#define RHS_ELEM_OFFSET 0
+#include "ast_normalizer.h"
 
 #define MAX_RHS_LEN 1024
 
@@ -16,6 +12,12 @@ const good_Grammar *good_new_grammar_from_ast(const good_AST *root_ast, const gr
     good_Grammar *grammar = NULL;
     const good_TerminalSymbolTable *tsymtbl = NULL;
     const grm_Grammar *prtbl = NULL;
+    const good_AST *ret_ast;
+    
+    ret_ast = good_normalize_ast(root_ast, symtbl);
+    if (ret_ast == NULL) {
+        goto FAILURE;
+    }
 
     grammar = (good_Grammar *) malloc(sizeof (good_Grammar));
     if (grammar == NULL) {
@@ -59,7 +61,7 @@ static const good_TerminalSymbolTable *good_new_tsymtbl_from_ast(const good_AST 
         const good_AST *lhs_ast;
         const good_AST *rhs_ast;
 
-        if (good_is_terminal_symbol_def(prule_ast) != 0) {
+        if (!good_is_terminal_symbol_def(prule_ast)) {
             continue;
         }
 
@@ -119,7 +121,7 @@ static const grm_Grammar *good_new_prtbl_from_ast(const good_AST *root_ast, cons
         const good_AST *lhs_ast;
         const char *lhs_str;
 
-        if (good_is_terminal_symbol_def(prule_ast) != 0) {
+        if (good_is_terminal_symbol_def(prule_ast)) {
             continue;
         }
 
@@ -193,7 +195,7 @@ static const grm_Grammar *good_new_prtbl_from_ast(const good_AST *root_ast, cons
 
 FAILURE:
     grm_delete(prtbl);
-
+    
     return NULL;
 }
 
@@ -218,20 +220,27 @@ static int good_is_terminal_symbol_def(const good_AST *prule_ast)
         return 0;
     }
 
+    rhs_ast = good_get_child(prule_ast, RHS_OFFSET);
+    if (rhs_ast == NULL) {
+        return 0;
+    }
+
     // 全ての生成規則の右辺値が1つの要素のみで構成されており、かつその要素が文字列の場合は、
     // その生成規則の左辺値の記号は終端記号と判定する。
-    for (rhs_ast = good_get_child(prule_ast, RHS_OFFSET); rhs_ast != NULL; rhs_ast = rhs_ast->brother) {
+    while (rhs_ast != NULL) {
         const good_AST *elem;
 
         if (good_count_child(rhs_ast) > 1) {
             return 0;
         }
 
-        elem = good_get_child(rhs_ast, 0);
+        elem = good_get_child(rhs_ast, RHS_ELEM_OFFSET);
         if (elem->type != good_AST_PRULE_RHS_ELEM_STRING) {
             return 0;
         }
-    }
 
+        rhs_ast = rhs_ast->brother;
+    }
+    
     return 1;
 }

@@ -29,4 +29,9 @@ good_AST *good_append_child(good_AST *parent, good_AST *child);
 good_AST *good_get_child(const good_AST *ast, size_t offset);
 size_t good_count_child(const good_AST *ast);
 
+#define PRULE_OFFSET 0
+#define LHS_OFFSET 0
+#define RHS_OFFSET 1
+#define RHS_ELEM_OFFSET 0
+
 #endif

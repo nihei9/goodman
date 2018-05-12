@@ -3,24 +3,24 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct grm_SymbolTable {
+struct good_SymbolTable {
 	hmap_HashMap *sym2id_map;
 	hmap_HashMap *id2sym_map;
-	grm_SymbolID id;
+	good_SymbolID id;
 
-	grm_SymbolID ret_id;
+	good_SymbolID ret_id;
 };
 
 /*
- * grm_SymbolTableオブジェクトを生成する。
+ * good_SymbolTableオブジェクトを生成する。
  */
-grm_SymbolTable *grm_new_symtbl(void)
+good_SymbolTable *good_new_symtbl(void)
 {
-	grm_SymbolTable *symtbl = NULL;
+	good_SymbolTable *symtbl = NULL;
 	hmap_HashMap *sym2id_map = NULL;
 	hmap_HashMap *id2sym_map = NULL;
 
-	symtbl = (grm_SymbolTable *) malloc(sizeof (grm_SymbolTable));
+	symtbl = (good_SymbolTable *) malloc(sizeof (good_SymbolTable));
 	if (symtbl == NULL) {
 		goto FAILURE;
 	}
@@ -52,15 +52,15 @@ FAILURE:
 }
 
 /*
- * 指定のgrm_SymbolTableオブジェクトを破棄する。
+ * 指定のgood_SymbolTableオブジェクトを破棄する。
  */
-void grm_delete_symtbl(grm_SymbolTable *symtbl)
+void good_delete_symtbl(good_SymbolTable *symtbl)
 {
 	if (symtbl == NULL) {
 		return;
 	}
 
-	// TODO grm_put_in_symtbl()内で生成したシンボルの複製の解放処理を実装する。
+	// TODO good_put_in_symtbl()内で生成したシンボルの複製の解放処理を実装する。
 
 	hmap_delete(symtbl->sym2id_map);
 	symtbl->sym2id_map = NULL;
@@ -72,20 +72,20 @@ void grm_delete_symtbl(grm_SymbolTable *symtbl)
 /*
  * symbolをsymtblへ登録する。
  * 
- * 戻り値は内部的に保持するgrm_SymbolIDへのポインタとなるため、次回呼び出し時には内容が書き換わる可能性がある。
- * よって、戻り値を受け取った呼び出し元はすぐにgrm_SymbolID型の変数へと値を退避させること。
+ * 戻り値は内部的に保持するgood_SymbolIDへのポインタとなるため、次回呼び出し時には内容が書き換わる可能性がある。
+ * よって、戻り値を受け取った呼び出し元はすぐにgood_SymbolID型の変数へと値を退避させること。
  */
-const grm_SymbolID *grm_put_in_symtbl(grm_SymbolTable *symtbl, const char *symbol, grm_SymbolType type)
+const good_SymbolID *good_put_in_symtbl(good_SymbolTable *symtbl, const char *symbol, good_SymbolType type)
 {
 	const char *dup_sym;
-	const grm_SymbolID *id;
-    grm_SymbolID sym_id;
+	const good_SymbolID *id;
+    good_SymbolID sym_id;
 
 	if (symtbl == NULL || symbol == NULL) {
 		return NULL;
 	}
 
-	id = (const grm_SymbolID *) hmap_lookup(symtbl->sym2id_map, &symbol);
+	id = (const good_SymbolID *) hmap_lookup(symtbl->sym2id_map, &symbol);
 	if (id != NULL) {
 		symtbl->ret_id = *id;
 
@@ -98,8 +98,8 @@ const grm_SymbolID *grm_put_in_symtbl(grm_SymbolTable *symtbl, const char *symbo
 	}
 
 	switch (type) {
-	case grm_SYMTYPE_TERMINAL:		sym_id = symtbl->id << 1; break;
-	case grm_SYMTYPE_NON_TERMINAL:	sym_id = (symtbl->id << 1) | 0x1; break;
+	case good_SYMTYPE_TERMINAL:		sym_id = symtbl->id << 1; break;
+	case good_SYMTYPE_NON_TERMINAL:	sym_id = (symtbl->id << 1) | 0x1; break;
 	default:						return NULL;
 	}
 	if (hmap_put(symtbl->sym2id_map, &dup_sym, &sym_id) == NULL) {
@@ -118,7 +118,7 @@ const grm_SymbolID *grm_put_in_symtbl(grm_SymbolTable *symtbl, const char *symbo
 /*
  * idに対応する記号の文字列表現を返す。
  */
-const char *grm_lookup_in_symtbl(const grm_SymbolTable *symtbl, grm_SymbolID id)
+const char *good_lookup_in_symtbl(const good_SymbolTable *symtbl, good_SymbolID id)
 {
 	void *sym;
 
@@ -137,11 +137,11 @@ const char *grm_lookup_in_symtbl(const grm_SymbolTable *symtbl, grm_SymbolID id)
 /*
  * idの記号種別を取得する。
  */
-grm_SymbolType grm_get_symbol_type(grm_SymbolID id)
+good_SymbolType good_get_symbol_type(good_SymbolID id)
 {
 	if ((id & 0x1) == 0x1) {
-		return grm_SYMTYPE_NON_TERMINAL;
+		return good_SYMTYPE_NON_TERMINAL;
 	}
 
-	return grm_SYMTYPE_TERMINAL;
+	return good_SYMTYPE_TERMINAL;
 }

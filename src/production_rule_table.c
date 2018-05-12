@@ -12,8 +12,8 @@
 
 struct grm_ProductionRule {
 	unsigned int id;
-	grm_SymbolID lhs;
-	grm_SymbolID *rhs;
+	good_SymbolID lhs;
+	good_SymbolID *rhs;
 	size_t rhs_len;
 
 	int is_empty;
@@ -24,12 +24,12 @@ unsigned int grm_get_pr_id(const grm_ProductionRule *pr)
 	return pr->id;
 }
 
-grm_SymbolID grm_get_pr_lhs(const grm_ProductionRule *pr)
+good_SymbolID grm_get_pr_lhs(const grm_ProductionRule *pr)
 {
 	return pr->lhs;
 }
 
-const grm_SymbolID *grm_get_pr_rhs(const grm_ProductionRule *pr)
+const good_SymbolID *grm_get_pr_rhs(const grm_ProductionRule *pr)
 {
 	return pr->rhs;
 }
@@ -78,7 +78,7 @@ static int grm_match_pr_by_id(unsigned int index, const void *elem, c_TypeUnion 
 static int grm_match_pr_by_lhs(unsigned int index, const void *elem, c_TypeUnion cond, void *user_data)
 {
 	const grm_ProductionRule *pr = (const grm_ProductionRule *) elem;
-	grm_SymbolID expected = cond.t_ulong;
+	good_SymbolID expected = cond.t_ulong;
 
 	if (pr->is_empty == 1) {
 		return 0;
@@ -151,16 +151,16 @@ void grm_delete_prtbl(grm_ProductionRuleTable *prtbl)
 	free(prtbl);
 }
 
-int grm_append_to_prtbl(grm_ProductionRuleTable *prtbl, grm_SymbolID lhs, const grm_SymbolID *rhs, size_t rhs_len)
+int grm_append_to_prtbl(grm_ProductionRuleTable *prtbl, good_SymbolID lhs, const good_SymbolID *rhs, size_t rhs_len)
 {
 	grm_ProductionRule pr;
-	grm_SymbolID *rhs_dup;
+	good_SymbolID *rhs_dup;
 	
-	rhs_dup = (grm_SymbolID *) malloc(sizeof (grm_SymbolID) * rhs_len);
+	rhs_dup = (good_SymbolID *) malloc(sizeof (good_SymbolID) * rhs_len);
 	if (rhs_dup == NULL) {
 		return 1;
 	}
-	memcpy(rhs_dup, rhs, sizeof (grm_SymbolID) * rhs_len);
+	memcpy(rhs_dup, rhs, sizeof (good_SymbolID) * rhs_len);
 	
 	pr.id = prtbl->next_id++;
 	pr.lhs = lhs;
@@ -191,7 +191,7 @@ grm_ProductionRuleFilter *grm_set_pr_filter_by_id(grm_ProductionRuleFilter *filt
 	return filter;
 }
 
-grm_ProductionRuleFilter *grm_set_pr_filter_by_lhs(grm_ProductionRuleFilter *filter, grm_SymbolID lhs)
+grm_ProductionRuleFilter *grm_set_pr_filter_by_lhs(grm_ProductionRuleFilter *filter, good_SymbolID lhs)
 {
 	arr_Filter *f;
 

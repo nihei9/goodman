@@ -3,11 +3,11 @@
 
 #define MAX_RHS_LEN 1024
 
-static const good_TerminalSymbolTable *good_new_tsymtbl_from_ast(const good_AST *root_ast, const grm_SymbolTable *symtbl);
-static const grm_Grammar *good_new_prtbl_from_ast(const good_AST *root_ast, const grm_SymbolTable *symtbl);
+static const good_TerminalSymbolTable *good_new_tsymtbl_from_ast(const good_AST *root_ast, const good_SymbolTable *symtbl);
+static const grm_Grammar *good_new_prtbl_from_ast(const good_AST *root_ast, const good_SymbolTable *symtbl);
 static int good_is_terminal_symbol_def(const good_AST *prule_ast);
 
-const good_Grammar *good_new_grammar_from_ast(const good_AST *root_ast, const grm_SymbolTable *symtbl)
+const good_Grammar *good_new_grammar_from_ast(const good_AST *root_ast, const good_SymbolTable *symtbl)
 {
     good_Grammar *grammar = NULL;
     const good_TerminalSymbolTable *tsymtbl = NULL;
@@ -47,7 +47,7 @@ FAILURE:
     return NULL;
 }
 
-static const good_TerminalSymbolTable *good_new_tsymtbl_from_ast(const good_AST *root_ast, const grm_SymbolTable *symtbl)
+static const good_TerminalSymbolTable *good_new_tsymtbl_from_ast(const good_AST *root_ast, const good_SymbolTable *symtbl)
 {
     good_TerminalSymbolTable *tsymtbl = NULL;
     const good_AST *prule_ast;
@@ -80,7 +80,7 @@ static const good_TerminalSymbolTable *good_new_tsymtbl_from_ast(const good_AST 
                 goto FAILURE;
             }
 
-            rhs_elem_str = grm_lookup_in_symtbl(symtbl, rhs_elem_ast->token.value.symbol_id);
+            rhs_elem_str = good_lookup_in_symtbl(symtbl, rhs_elem_ast->token.value.symbol_id);
             if (rhs_elem_str == NULL) {
                 goto FAILURE;
             }
@@ -100,7 +100,7 @@ FAILURE:
     return NULL;
 }
 
-static const grm_Grammar *good_new_prtbl_from_ast(const good_AST *root_ast, const grm_SymbolTable *symtbl)
+static const grm_Grammar *good_new_prtbl_from_ast(const good_AST *root_ast, const good_SymbolTable *symtbl)
 {
     grm_Grammar *prtbl = NULL;
     const good_AST *prule_ast;
@@ -110,7 +110,7 @@ static const grm_Grammar *good_new_prtbl_from_ast(const good_AST *root_ast, cons
         goto FAILURE;
     }
     
-    grm_set_default_symbol_type(prtbl, grm_SYMTYPE_TERMINAL);
+    grm_set_default_symbol_type(prtbl, good_SYMTYPE_TERMINAL);
 
     /*
      * 生成規則の左辺値を非終端記号として登録する。
@@ -129,12 +129,12 @@ static const grm_Grammar *good_new_prtbl_from_ast(const good_AST *root_ast, cons
         if (lhs_ast == NULL) {
             goto FAILURE;
         }
-        lhs_str = grm_lookup_in_symtbl(symtbl, lhs_ast->token.value.symbol_id);
+        lhs_str = good_lookup_in_symtbl(symtbl, lhs_ast->token.value.symbol_id);
         if (lhs_str == NULL) {
             goto FAILURE;
         }
 
-        grm_put_symbol_as(prtbl, lhs_str, grm_SYMTYPE_NON_TERMINAL);
+        grm_put_symbol_as(prtbl, lhs_str, good_SYMTYPE_NON_TERMINAL);
     }
 
     /*
@@ -157,7 +157,7 @@ static const grm_Grammar *good_new_prtbl_from_ast(const good_AST *root_ast, cons
         if (lhs_ast == NULL) {
             goto FAILURE;
         }
-        lhs_str = grm_lookup_in_symtbl(symtbl, lhs_ast->token.value.symbol_id);
+        lhs_str = good_lookup_in_symtbl(symtbl, lhs_ast->token.value.symbol_id);
         if (lhs_str == NULL) {
             goto FAILURE;
         }
@@ -174,7 +174,7 @@ static const grm_Grammar *good_new_prtbl_from_ast(const good_AST *root_ast, cons
                     goto FAILURE;
                 }
 
-                rhs_elem_str = grm_lookup_in_symtbl(symtbl, rhs_elem_ast->token.value.symbol_id);
+                rhs_elem_str = good_lookup_in_symtbl(symtbl, rhs_elem_ast->token.value.symbol_id);
                 if (rhs_elem_str == NULL) {
                     goto FAILURE;
                 }

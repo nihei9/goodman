@@ -1,7 +1,7 @@
 #include "first_set.h"
 
 typedef struct ffset_FirstSetBranchElem {
-    grm_SymbolID *set;
+    good_SymbolID *set;
     size_t len;
 
     int has_calcurated;
@@ -38,7 +38,7 @@ static int ffset_setup_fsts_table(ffset_FirstSet *fsts, const grm_Grammar *grm);
 static void ffset_set_fsts_calc_frame(ffset_FirstSetCalcFrame *frame, unsigned int prule_id, size_t offset, size_t arr_bottom_index);
 static int ffset_calc_fsts_at(ffset_FirstSet *fsts, ffset_FirstSetCalcFrame *frame, const grm_Grammar *grm);
 static int ffset_add_fsts(ffset_FirstSet *fsts, ffset_FirstSetCalcFrame *frame, unsigned int prule_id, size_t offset);
-static int ffset_push_fsts_symbol(ffset_FirstSet *fsts, ffset_FirstSetCalcFrame *frame, grm_SymbolID symbol);
+static int ffset_push_fsts_symbol(ffset_FirstSet *fsts, ffset_FirstSetCalcFrame *frame, good_SymbolID symbol);
 
 ffset_FirstSet *ffset_new_fsts(void)
 {
@@ -50,7 +50,7 @@ ffset_FirstSet *ffset_new_fsts(void)
         goto FAILURE;
     }
 
-    arr = arr_new(sizeof (grm_SymbolID));
+    arr = arr_new(sizeof (good_SymbolID));
     if (arr == NULL) {
         goto FAILURE;
     }
@@ -137,7 +137,7 @@ int ffset_get_fsts(ffset_FirstSetItem *item)
 {
     ffset_FirstSetTableElem *table_elem;
     ffset_FirstSetBranchElem *branch_elem;
-    grm_SymbolID *tmp_set = NULL;
+    good_SymbolID *tmp_set = NULL;
     size_t tmp_len = 0;
     int tmp_has_empty = 0;
 
@@ -282,7 +282,7 @@ static int ffset_calc_fsts_at(ffset_FirstSet *fsts, ffset_FirstSetCalcFrame *fra
     ffset_FirstSetTableElem *table_elem;
     ffset_FirstSetBranchElem *branch_elem;
     const grm_ProductionRule *pr;
-    const grm_SymbolID *rhs;
+    const good_SymbolID *rhs;
 
     frame->arr_fill_index = frame->arr_bottom_index;
     frame->has_empty = 0;
@@ -314,7 +314,7 @@ static int ffset_calc_fsts_at(ffset_FirstSet *fsts, ffset_FirstSetCalcFrame *fra
      */
     rhs = grm_get_pr_rhs(pr);
     rhs = &rhs[frame->offset];
-    if (grm_get_symbol_type(rhs[0]) == grm_SYMTYPE_TERMINAL) {
+    if (good_get_symbol_type(rhs[0]) == good_SYMTYPE_TERMINAL) {
         int ret;
 
         ret = ffset_push_fsts_symbol(fsts, frame, rhs[0]);
@@ -383,15 +383,15 @@ static int ffset_calc_fsts_at(ffset_FirstSet *fsts, ffset_FirstSetCalcFrame *fra
 
 RETURN:
     if ((frame->arr_fill_index - frame->arr_bottom_index) > 0) {
-        grm_SymbolID *set;
+        good_SymbolID *set;
         size_t i;
 
-        set = (grm_SymbolID *) calloc(frame->arr_fill_index - frame->arr_bottom_index, sizeof (grm_SymbolID));
+        set = (good_SymbolID *) calloc(frame->arr_fill_index - frame->arr_bottom_index, sizeof (good_SymbolID));
         if (set == NULL) {
             return 1;
         }
         for (i = frame->arr_bottom_index; i < frame->arr_fill_index; i++) {
-            const grm_SymbolID *sym;
+            const good_SymbolID *sym;
 
             sym = arr_get(fsts->work.arr, i);
             if (sym == NULL) {
@@ -442,7 +442,7 @@ static int ffset_add_fsts(ffset_FirstSet *fsts, ffset_FirstSetCalcFrame *frame, 
     return 0;
 }
 
-static int ffset_push_fsts_symbol(ffset_FirstSet *fsts, ffset_FirstSetCalcFrame *frame, grm_SymbolID symbol)
+static int ffset_push_fsts_symbol(ffset_FirstSet *fsts, ffset_FirstSetCalcFrame *frame, good_SymbolID symbol)
 {
     int already_exists = 0;
 

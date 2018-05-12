@@ -13,7 +13,7 @@ typedef struct ffset_FirstSetItem {
     } input;
 
     struct {
-        grm_SymbolID *set;
+        good_SymbolID *set;
         size_t len;
         int has_empty;
     } output;

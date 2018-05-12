@@ -22,14 +22,14 @@ void test_1(connie_Connie *c)
     const good_Grammar *grm;
     good_Parser *psr;
     good_Tokenizer *tknzr;
-    grm_SymbolTable *symtbl;
+    good_SymbolTable *symtbl;
     FILE *target;
     const good_AST *ast;
 
     target = fopen("test/data/test.goodman", "r");
     A_NOT_NULL(c, target);
 
-    symtbl = grm_new_symtbl();
+    symtbl = good_new_symtbl();
     A_NOT_NULL(c, symtbl);
 
     tknzr = good_new_tokenizer(target, symtbl);

@@ -8,7 +8,7 @@ typedef struct good_TerminalSymbolTable good_TerminalSymbolTable;
 
 good_TerminalSymbolTable *good_new_tsymtbl(void);
 void good_delete_tsymtbl(good_TerminalSymbolTable *tsymtbl);
-int good_put_tsym(good_TerminalSymbolTable *tsymtbl, grm_SymbolID tsym_id, const char *format);
-const char *good_get_tsym_format(const good_TerminalSymbolTable *tsymtbl, grm_SymbolID tsym_id);
+int good_put_tsym(good_TerminalSymbolTable *tsymtbl, good_SymbolID tsym_id, const char *format);
+const char *good_get_tsym_format(const good_TerminalSymbolTable *tsymtbl, good_SymbolID tsym_id);
 
 #endif

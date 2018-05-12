@@ -22,7 +22,7 @@ typedef struct good_Position {
 typedef struct good_Token {
     good_TokenType type;
     union {
-        grm_SymbolID symbol_id;
+        good_SymbolID symbol_id;
     } value;
 
     good_Position pos;

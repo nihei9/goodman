@@ -34,7 +34,7 @@ void test_followset(connie_Connie *c)
         const char *rhs_T_2[] = {"F"};
         const char *rhs_F_1[] = {"(", "E", ")"};
         const char *rhs_F_2[] = {"id"};
-        const grm_SymbolID *start_symbol;
+        const good_SymbolID *start_symbol;
 
         grm = grm_new();
 

@@ -20,7 +20,7 @@ void test_1(connie_Connie *c)
 {
     good_Parser *psr;
     good_Tokenizer *tknzr;
-    grm_SymbolTable *symtbl;
+    good_SymbolTable *symtbl;
     FILE *target;
     const good_AST *root_ast;
     const good_AST *prule_ast;
@@ -31,7 +31,7 @@ void test_1(connie_Connie *c)
     target = fopen("test/data/test.goodman", "r");
     A_NOT_NULL(c, target);
 
-    symtbl = grm_new_symtbl();
+    symtbl = good_new_symtbl();
     A_NOT_NULL(c, symtbl);
 
     tknzr = good_new_tokenizer(target, symtbl);
@@ -51,7 +51,7 @@ void test_1(connie_Connie *c)
     prule_lhs_ast = prule_ast->child;
     A_NOT_NULL(c, prule_lhs_ast);
     A_EQL_INT(c, good_AST_PRULE_LHS, prule_lhs_ast->type);
-    A_EQL_STRING(c, "E", grm_lookup_in_symtbl(symtbl, prule_lhs_ast->token.value.symbol_id));
+    A_EQL_STRING(c, "E", good_lookup_in_symtbl(symtbl, prule_lhs_ast->token.value.symbol_id));
     // : E '+' T
     prule_rhs_ast = prule_lhs_ast->brother;
     A_NOT_NULL(c, prule_rhs_ast);
@@ -59,15 +59,15 @@ void test_1(connie_Connie *c)
     prule_rhs_elem_ast = prule_rhs_ast->child;
     A_NOT_NULL(c, prule_rhs_elem_ast);
     A_EQL_INT(c, good_AST_PRULE_RHS_ELEM_SYMBOL, prule_rhs_elem_ast->type);
-    A_EQL_STRING(c, "E", grm_lookup_in_symtbl(symtbl, prule_rhs_elem_ast->token.value.symbol_id));
+    A_EQL_STRING(c, "E", good_lookup_in_symtbl(symtbl, prule_rhs_elem_ast->token.value.symbol_id));
     prule_rhs_elem_ast = prule_rhs_elem_ast->brother;
     A_NOT_NULL(c, prule_rhs_elem_ast);
     A_EQL_INT(c, good_AST_PRULE_RHS_ELEM_STRING, prule_rhs_elem_ast->type);
-    A_EQL_STRING(c, "+", grm_lookup_in_symtbl(symtbl, prule_rhs_elem_ast->token.value.symbol_id));
+    A_EQL_STRING(c, "+", good_lookup_in_symtbl(symtbl, prule_rhs_elem_ast->token.value.symbol_id));
     prule_rhs_elem_ast = prule_rhs_elem_ast->brother;
     A_NOT_NULL(c, prule_rhs_elem_ast);
     A_EQL_INT(c, good_AST_PRULE_RHS_ELEM_SYMBOL, prule_rhs_elem_ast->type);
-    A_EQL_STRING(c, "T", grm_lookup_in_symtbl(symtbl, prule_rhs_elem_ast->token.value.symbol_id));
+    A_EQL_STRING(c, "T", good_lookup_in_symtbl(symtbl, prule_rhs_elem_ast->token.value.symbol_id));
     prule_rhs_elem_ast = prule_rhs_elem_ast->brother;
     A_NULL(c, prule_rhs_elem_ast);
     // | T
@@ -77,7 +77,7 @@ void test_1(connie_Connie *c)
     prule_rhs_elem_ast = prule_rhs_ast->child;
     A_NOT_NULL(c, prule_rhs_elem_ast);
     A_EQL_INT(c, good_AST_PRULE_RHS_ELEM_SYMBOL, prule_rhs_elem_ast->type);
-    A_EQL_STRING(c, "T", grm_lookup_in_symtbl(symtbl, prule_rhs_elem_ast->token.value.symbol_id));
+    A_EQL_STRING(c, "T", good_lookup_in_symtbl(symtbl, prule_rhs_elem_ast->token.value.symbol_id));
     prule_rhs_elem_ast = prule_rhs_elem_ast->brother;
     A_NULL(c, prule_rhs_elem_ast);
 
@@ -88,7 +88,7 @@ void test_1(connie_Connie *c)
     prule_lhs_ast = prule_ast->child;
     A_NOT_NULL(c, prule_lhs_ast);
     A_EQL_INT(c, good_AST_PRULE_LHS, prule_lhs_ast->type);
-    A_EQL_STRING(c, "T", grm_lookup_in_symtbl(symtbl, prule_lhs_ast->token.value.symbol_id));
+    A_EQL_STRING(c, "T", good_lookup_in_symtbl(symtbl, prule_lhs_ast->token.value.symbol_id));
     // : T '*' F
     prule_rhs_ast = prule_lhs_ast->brother;
     A_NOT_NULL(c, prule_rhs_ast);
@@ -96,15 +96,15 @@ void test_1(connie_Connie *c)
     prule_rhs_elem_ast = prule_rhs_ast->child;
     A_NOT_NULL(c, prule_rhs_elem_ast);
     A_EQL_INT(c, good_AST_PRULE_RHS_ELEM_SYMBOL, prule_rhs_elem_ast->type);
-    A_EQL_STRING(c, "T", grm_lookup_in_symtbl(symtbl, prule_rhs_elem_ast->token.value.symbol_id));
+    A_EQL_STRING(c, "T", good_lookup_in_symtbl(symtbl, prule_rhs_elem_ast->token.value.symbol_id));
     prule_rhs_elem_ast = prule_rhs_elem_ast->brother;
     A_NOT_NULL(c, prule_rhs_elem_ast);
     A_EQL_INT(c, good_AST_PRULE_RHS_ELEM_STRING, prule_rhs_elem_ast->type);
-    A_EQL_STRING(c, "*", grm_lookup_in_symtbl(symtbl, prule_rhs_elem_ast->token.value.symbol_id));
+    A_EQL_STRING(c, "*", good_lookup_in_symtbl(symtbl, prule_rhs_elem_ast->token.value.symbol_id));
     prule_rhs_elem_ast = prule_rhs_elem_ast->brother;
     A_NOT_NULL(c, prule_rhs_elem_ast);
     A_EQL_INT(c, good_AST_PRULE_RHS_ELEM_SYMBOL, prule_rhs_elem_ast->type);
-    A_EQL_STRING(c, "F", grm_lookup_in_symtbl(symtbl, prule_rhs_elem_ast->token.value.symbol_id));
+    A_EQL_STRING(c, "F", good_lookup_in_symtbl(symtbl, prule_rhs_elem_ast->token.value.symbol_id));
     prule_rhs_elem_ast = prule_rhs_elem_ast->brother;
     A_NULL(c, prule_rhs_elem_ast);
     // | F
@@ -114,7 +114,7 @@ void test_1(connie_Connie *c)
     prule_rhs_elem_ast = prule_rhs_ast->child;
     A_NOT_NULL(c, prule_rhs_elem_ast);
     A_EQL_INT(c, good_AST_PRULE_RHS_ELEM_SYMBOL, prule_rhs_elem_ast->type);
-    A_EQL_STRING(c, "F", grm_lookup_in_symtbl(symtbl, prule_rhs_elem_ast->token.value.symbol_id));
+    A_EQL_STRING(c, "F", good_lookup_in_symtbl(symtbl, prule_rhs_elem_ast->token.value.symbol_id));
     prule_rhs_elem_ast = prule_rhs_elem_ast->brother;
     A_NULL(c, prule_rhs_elem_ast);
 
@@ -125,7 +125,7 @@ void test_1(connie_Connie *c)
     prule_lhs_ast = prule_ast->child;
     A_NOT_NULL(c, prule_lhs_ast);
     A_EQL_INT(c, good_AST_PRULE_LHS, prule_lhs_ast->type);
-    A_EQL_STRING(c, "F", grm_lookup_in_symtbl(symtbl, prule_lhs_ast->token.value.symbol_id));
+    A_EQL_STRING(c, "F", good_lookup_in_symtbl(symtbl, prule_lhs_ast->token.value.symbol_id));
     // : '(' E ')'
     prule_rhs_ast = prule_lhs_ast->brother;
     A_NOT_NULL(c, prule_rhs_ast);
@@ -133,15 +133,15 @@ void test_1(connie_Connie *c)
     prule_rhs_elem_ast = prule_rhs_ast->child;
     A_NOT_NULL(c, prule_rhs_elem_ast);
     A_EQL_INT(c, good_AST_PRULE_RHS_ELEM_STRING, prule_rhs_elem_ast->type);
-    A_EQL_STRING(c, "(", grm_lookup_in_symtbl(symtbl, prule_rhs_elem_ast->token.value.symbol_id));
+    A_EQL_STRING(c, "(", good_lookup_in_symtbl(symtbl, prule_rhs_elem_ast->token.value.symbol_id));
     prule_rhs_elem_ast = prule_rhs_elem_ast->brother;
     A_NOT_NULL(c, prule_rhs_elem_ast);
     A_EQL_INT(c, good_AST_PRULE_RHS_ELEM_SYMBOL, prule_rhs_elem_ast->type);
-    A_EQL_STRING(c, "E", grm_lookup_in_symtbl(symtbl, prule_rhs_elem_ast->token.value.symbol_id));
+    A_EQL_STRING(c, "E", good_lookup_in_symtbl(symtbl, prule_rhs_elem_ast->token.value.symbol_id));
     prule_rhs_elem_ast = prule_rhs_elem_ast->brother;
     A_NOT_NULL(c, prule_rhs_elem_ast);
     A_EQL_INT(c, good_AST_PRULE_RHS_ELEM_STRING, prule_rhs_elem_ast->type);
-    A_EQL_STRING(c, ")", grm_lookup_in_symtbl(symtbl, prule_rhs_elem_ast->token.value.symbol_id));
+    A_EQL_STRING(c, ")", good_lookup_in_symtbl(symtbl, prule_rhs_elem_ast->token.value.symbol_id));
     prule_rhs_elem_ast = prule_rhs_elem_ast->brother;
     A_NULL(c, prule_rhs_elem_ast);
     // | id
@@ -151,7 +151,7 @@ void test_1(connie_Connie *c)
     prule_rhs_elem_ast = prule_rhs_ast->child;
     A_NOT_NULL(c, prule_rhs_elem_ast);
     A_EQL_INT(c, good_AST_PRULE_RHS_ELEM_SYMBOL, prule_rhs_elem_ast->type);
-    A_EQL_STRING(c, "id", grm_lookup_in_symtbl(symtbl, prule_rhs_elem_ast->token.value.symbol_id));
+    A_EQL_STRING(c, "id", good_lookup_in_symtbl(symtbl, prule_rhs_elem_ast->token.value.symbol_id));
     prule_rhs_elem_ast = prule_rhs_elem_ast->brother;
     A_NULL(c, prule_rhs_elem_ast);
 
@@ -162,7 +162,7 @@ void test_1(connie_Connie *c)
     prule_lhs_ast = prule_ast->child;
     A_NOT_NULL(c, prule_lhs_ast);
     A_EQL_INT(c, good_AST_PRULE_LHS, prule_lhs_ast->type);
-    A_EQL_STRING(c, "id", grm_lookup_in_symtbl(symtbl, prule_lhs_ast->token.value.symbol_id));
+    A_EQL_STRING(c, "id", good_lookup_in_symtbl(symtbl, prule_lhs_ast->token.value.symbol_id));
     // : '[a-zA-Z_][a-zA-Z0-9_]*'
     prule_rhs_ast = prule_lhs_ast->brother;
     A_NOT_NULL(c, prule_rhs_ast);
@@ -170,7 +170,7 @@ void test_1(connie_Connie *c)
     prule_rhs_elem_ast = prule_rhs_ast->child;
     A_NOT_NULL(c, prule_rhs_elem_ast);
     A_EQL_INT(c, good_AST_PRULE_RHS_ELEM_STRING, prule_rhs_elem_ast->type);
-    A_EQL_STRING(c, "[a-zA-Z_][a-zA-Z0-9_]*", grm_lookup_in_symtbl(symtbl, prule_rhs_elem_ast->token.value.symbol_id));
+    A_EQL_STRING(c, "[a-zA-Z_][a-zA-Z0-9_]*", good_lookup_in_symtbl(symtbl, prule_rhs_elem_ast->token.value.symbol_id));
     prule_rhs_elem_ast = prule_rhs_elem_ast->brother;
     A_NULL(c, prule_rhs_elem_ast);
 
@@ -180,4 +180,5 @@ void test_1(connie_Connie *c)
     good_delete_ast((good_AST *) root_ast);
     good_delete_parser(psr);
     good_delete_tokenizer(tknzr);
+    good_delete_symtbl(symtbl);
 }

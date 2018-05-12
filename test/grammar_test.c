@@ -5,8 +5,8 @@
 static void test_symbols(connie_Connie *c);
 static void test_prules(connie_Connie *c);
 
-static void put_symbol_as(connie_Connie *c, grm_Grammar *grm, const char *symbol, grm_SymbolType type);
-static void put_symbol(connie_Connie *c, grm_Grammar *grm, const char *symbol, grm_SymbolType expected_type);
+static void put_symbol_as(connie_Connie *c, grm_Grammar *grm, const char *symbol, good_SymbolType type);
+static void put_symbol(connie_Connie *c, grm_Grammar *grm, const char *symbol, good_SymbolType expected_type);
 
 int main(void)
 {
@@ -33,7 +33,7 @@ static void test_symbols(connie_Connie *c)
 	A_NOT_NULL(c, grm);
 
 	{
-		grm_SymbolType type;
+		good_SymbolType type;
 
 		type = grm_set_default_symbol_type(grm, grm_SYMTYPE_NON_TERMINAL);
 		// grm_new()直後のデフォルト値はgrm_SYMTYPE_TERMINALとなること。
@@ -126,8 +126,8 @@ static void test_prules(connie_Connie *c)
 		prule = grm_next_prule(grm, f);
 		A_NOT_NULL(c, prule);
 		{
-			grm_SymbolID lhs = grm_get_pr_lhs(prule);
-			const grm_SymbolID *rhs = grm_get_pr_rhs(prule);
+			good_SymbolID lhs = grm_get_pr_lhs(prule);
+			const good_SymbolID *rhs = grm_get_pr_rhs(prule);
 			size_t rhs_len = grm_get_pr_rhs_len(prule);
 			size_t i;
 
@@ -143,8 +143,8 @@ static void test_prules(connie_Connie *c)
 		prule = grm_next_prule(grm, f);
 		A_NOT_NULL(c, prule);
 		{
-			grm_SymbolID lhs = grm_get_pr_lhs(prule);
-			const grm_SymbolID *rhs = grm_get_pr_rhs(prule);
+			good_SymbolID lhs = grm_get_pr_lhs(prule);
+			const good_SymbolID *rhs = grm_get_pr_rhs(prule);
 			size_t rhs_len = grm_get_pr_rhs_len(prule);
 			size_t i;
 
@@ -160,8 +160,8 @@ static void test_prules(connie_Connie *c)
 		prule = grm_next_prule(grm, f);
 		A_NOT_NULL(c, prule);
 		{
-			grm_SymbolID lhs = grm_get_pr_lhs(prule);
-			const grm_SymbolID *rhs = grm_get_pr_rhs(prule);
+			good_SymbolID lhs = grm_get_pr_lhs(prule);
+			const good_SymbolID *rhs = grm_get_pr_rhs(prule);
 			size_t rhs_len = grm_get_pr_rhs_len(prule);
 			size_t i;
 
@@ -177,8 +177,8 @@ static void test_prules(connie_Connie *c)
 		prule = grm_next_prule(grm, f);
 		A_NOT_NULL(c, prule);
 		{
-			grm_SymbolID lhs = grm_get_pr_lhs(prule);
-			const grm_SymbolID *rhs = grm_get_pr_rhs(prule);
+			good_SymbolID lhs = grm_get_pr_lhs(prule);
+			const good_SymbolID *rhs = grm_get_pr_rhs(prule);
 			size_t rhs_len = grm_get_pr_rhs_len(prule);
 			size_t i;
 
@@ -194,8 +194,8 @@ static void test_prules(connie_Connie *c)
 		prule = grm_next_prule(grm, f);
 		A_NOT_NULL(c, prule);
 		{
-			grm_SymbolID lhs = grm_get_pr_lhs(prule);
-			const grm_SymbolID *rhs = grm_get_pr_rhs(prule);
+			good_SymbolID lhs = grm_get_pr_lhs(prule);
+			const good_SymbolID *rhs = grm_get_pr_rhs(prule);
 			size_t rhs_len = grm_get_pr_rhs_len(prule);
 			size_t i;
 
@@ -211,8 +211,8 @@ static void test_prules(connie_Connie *c)
 		prule = grm_next_prule(grm, f);
 		A_NOT_NULL(c, prule);
 		{
-			grm_SymbolID lhs = grm_get_pr_lhs(prule);
-			const grm_SymbolID *rhs = grm_get_pr_rhs(prule);
+			good_SymbolID lhs = grm_get_pr_lhs(prule);
+			const good_SymbolID *rhs = grm_get_pr_rhs(prule);
 			size_t rhs_len = grm_get_pr_rhs_len(prule);
 			size_t i;
 
@@ -232,16 +232,16 @@ static void test_prules(connie_Connie *c)
 	grm_delete(grm);
 }
 
-static void put_symbol_as(connie_Connie *c, grm_Grammar *grm, const char *symbol, grm_SymbolType type)
+static void put_symbol_as(connie_Connie *c, grm_Grammar *grm, const char *symbol, good_SymbolType type)
 {
-	const grm_SymbolID *id;
-	grm_SymbolType t;
+	const good_SymbolID *id;
+	good_SymbolType t;
 	const char *s;
 
 	id = grm_put_symbol_as(grm, symbol, type);
 	A_NOT_NULL(c, id);
 
-	t = grm_get_symbol_type(*id);
+	t = good_get_symbol_type(*id);
 	A_EQL_INT(c, grm_SYMTYPE_NON_TERMINAL, t);
 
 	s = grm_lookup_symbol(grm, *id);
@@ -249,16 +249,16 @@ static void put_symbol_as(connie_Connie *c, grm_Grammar *grm, const char *symbol
 	A_EQL_STRING(c, symbol, s);
 }
 
-static void put_symbol(connie_Connie *c, grm_Grammar *grm, const char *symbol, grm_SymbolType expected_type)
+static void put_symbol(connie_Connie *c, grm_Grammar *grm, const char *symbol, good_SymbolType expected_type)
 {
-	const grm_SymbolID *id;
-	grm_SymbolType t;
+	const good_SymbolID *id;
+	good_SymbolType t;
 	const char *s;
 
 	id = grm_put_symbol(grm, symbol);
 	A_NOT_NULL(c, id);
 
-	t = grm_get_symbol_type(*id);
+	t = good_get_symbol_type(*id);
 	A_EQL_INT(c, expected_type, t);
 
 	s = grm_lookup_symbol(grm, *id);

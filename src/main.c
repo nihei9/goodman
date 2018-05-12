@@ -12,7 +12,7 @@ int main(int argc, const char *argv[])
     const good_AST *ast = NULL;
     good_Parser *psr = NULL;
     good_Tokenizer *tknzr = NULL;
-    grm_SymbolTable *symtbl = NULL;
+    good_SymbolTable *symtbl = NULL;
     FILE *target = NULL;
     int rc = 0;
 
@@ -31,7 +31,7 @@ int main(int argc, const char *argv[])
         goto END;
     }
 
-    symtbl = grm_new_symtbl();
+    symtbl = good_new_symtbl();
     if (symtbl == NULL) {
         printf("Failed to create symbol table.\n");
 
@@ -78,7 +78,7 @@ END:
     good_delete_ast((good_AST *) ast);
     good_delete_parser(psr);
     good_delete_tokenizer(tknzr);
-    grm_delete_symtbl(symtbl);
+    good_delete_symtbl(symtbl);
     if (target != NULL) {
         fclose(target);
     }
@@ -101,10 +101,10 @@ static void good_print_grammar(const good_Grammar *grammar)
         
         f = grm_find_all_prule(prtbl, &filter);
         while ((prule = grm_next_prule(prtbl, f)) != NULL) {
-            grm_SymbolID lhs = grm_get_pr_lhs(prule);
-            const grm_SymbolID *rhs = grm_get_pr_rhs(prule);
+            good_SymbolID lhs = grm_get_pr_lhs(prule);
+            const good_SymbolID *rhs = grm_get_pr_rhs(prule);
 
-            if (grm_get_symbol_type(lhs) != grm_SYMTYPE_TERMINAL) {
+            if (good_get_symbol_type(lhs) != good_SYMTYPE_TERMINAL) {
                 continue;
             }
 
@@ -125,12 +125,12 @@ static void good_print_grammar(const good_Grammar *grammar)
         
         f = grm_find_all_prule(prtbl, &filter);
         while ((prule = grm_next_prule(prtbl, f)) != NULL) {
-            grm_SymbolID lhs = grm_get_pr_lhs(prule);
-            const grm_SymbolID *rhs = grm_get_pr_rhs(prule);
+            good_SymbolID lhs = grm_get_pr_lhs(prule);
+            const good_SymbolID *rhs = grm_get_pr_rhs(prule);
             size_t rhs_len = grm_get_pr_rhs_len(prule);
             size_t i;
 
-            if (grm_get_symbol_type(lhs) != grm_SYMTYPE_NON_TERMINAL) {
+            if (good_get_symbol_type(lhs) != good_SYMTYPE_NON_TERMINAL) {
                 continue;
             }
 

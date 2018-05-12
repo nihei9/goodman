@@ -41,7 +41,7 @@ void good_delete_tsymtbl(good_TerminalSymbolTable *tsymtbl)
     free(tsymtbl);
 }
 
-int good_put_tsym(good_TerminalSymbolTable *tsymtbl, grm_SymbolID tsym_id, const char *format)
+int good_put_tsym(good_TerminalSymbolTable *tsymtbl, good_SymbolID tsym_id, const char *format)
 {
     const char *dup_format;
     void *ret;
@@ -59,7 +59,7 @@ int good_put_tsym(good_TerminalSymbolTable *tsymtbl, grm_SymbolID tsym_id, const
     return 0;
 }
 
-const char *good_get_tsym_format(const good_TerminalSymbolTable *tsymtbl, grm_SymbolID tsym_id)
+const char *good_get_tsym_format(const good_TerminalSymbolTable *tsymtbl, good_SymbolID tsym_id)
 {
     void *v;
 

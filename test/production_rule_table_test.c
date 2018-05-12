@@ -16,19 +16,19 @@ int main (void)
     return 0;
 }
 
-#define RHS_LEN(rhs) ((sizeof (rhs)) / (sizeof (grm_SymbolID)))
+#define RHS_LEN(rhs) ((sizeof (rhs)) / (sizeof (good_SymbolID)))
 
 static void test_append_production_rule(connie_Connie *c)
 {
     grm_ProductionRuleTable *prtbl;
 
-    grm_SymbolID lhs_foo = 101;
-    grm_SymbolID lhs_bar = 102;
-    grm_SymbolID lhs_baz = 103;
-    grm_SymbolID rhs_foo_1[] = {1, 2, 3};
-    grm_SymbolID rhs_bar_1[] = {2, 4};
-    grm_SymbolID rhs_bar_2[] = {5, 6, 7, 8};
-    grm_SymbolID rhs_baz_1[] = {};
+    good_SymbolID lhs_foo = 101;
+    good_SymbolID lhs_bar = 102;
+    good_SymbolID lhs_baz = 103;
+    good_SymbolID rhs_foo_1[] = {1, 2, 3};
+    good_SymbolID rhs_bar_1[] = {2, 4};
+    good_SymbolID rhs_bar_2[] = {5, 6, 7, 8};
+    good_SymbolID rhs_baz_1[] = {};
 
     prtbl = grm_new_prtbl();
     A_NOT_NULL(c, prtbl);

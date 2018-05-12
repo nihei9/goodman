@@ -2,7 +2,7 @@
 #include "collections.h"
 
 typedef struct ffset_FollowSetTableElem {
-    grm_SymbolID *head;
+    good_SymbolID *head;
     size_t len;
     int has_eof;
 } ffset_FollowSetTableElem;
@@ -18,7 +18,7 @@ struct ffset_FollowSet {
 };
 
 typedef struct ffset_FollowSetCalcFrame {
-    grm_SymbolID sym;
+    good_SymbolID sym;
     size_t arr_bottom_index;
     size_t arr_fill_index;
     int has_eof;
@@ -26,7 +26,7 @@ typedef struct ffset_FollowSetCalcFrame {
 } ffset_FollowSetCalcFrame;
 
 
-static void ffset_set_flws_calc_frame(ffset_FollowSetCalcFrame *frame, grm_SymbolID sym, size_t arr_bottom_index);
+static void ffset_set_flws_calc_frame(ffset_FollowSetCalcFrame *frame, good_SymbolID sym, size_t arr_bottom_index);
 static int ffset_calc_flws_at(ffset_FollowSet *flws, ffset_FollowSetCalcFrame *frame, const grm_Grammar *grm, const ffset_FirstSet *fsts);
 
 
@@ -41,7 +41,7 @@ ffset_FollowSet *ffset_new_flws(void)
         goto FAILURE;
     }
 
-    arr = arr_new(sizeof (grm_SymbolID));
+    arr = arr_new(sizeof (good_SymbolID));
     if (arr == NULL) {
         goto FAILURE;
     }
@@ -96,7 +96,7 @@ int ffset_calc_flws(ffset_FollowSet *flws, const grm_Grammar *grm, const ffset_F
     }
 
     while (prule != NULL) {
-        grm_SymbolID sym = grm_get_pr_lhs(prule);
+        good_SymbolID sym = grm_get_pr_lhs(prule);
         ffset_FollowSetCalcFrame frame;
         int ret;
 
@@ -130,7 +130,7 @@ int ffset_get_flws(ffset_FollowSetItem *item)
 }
 
 
-static void ffset_set_flws_calc_frame(ffset_FollowSetCalcFrame *frame, grm_SymbolID sym, size_t arr_bottom_index)
+static void ffset_set_flws_calc_frame(ffset_FollowSetCalcFrame *frame, good_SymbolID sym, size_t arr_bottom_index)
 {
     frame->sym = sym;
     frame->arr_bottom_index = arr_bottom_index;
@@ -139,7 +139,7 @@ static void ffset_set_flws_calc_frame(ffset_FollowSetCalcFrame *frame, grm_Symbo
 
 static int ffset_calc_flws_at(ffset_FollowSet *flws, ffset_FollowSetCalcFrame *frame, const grm_Grammar *grm, const ffset_FirstSet *fsts)
 {
-    const grm_SymbolID ssym = grm_get_start_symbol(grm);
+    const good_SymbolID ssym = grm_get_start_symbol(grm);
 
     frame->arr_fill_index = frame->arr_bottom_index;
     frame->has_eof = 0;
@@ -170,7 +170,7 @@ static int ffset_calc_flws_at(ffset_FollowSet *flws, ffset_FollowSetCalcFrame *f
         }
 
         while (prule != NULL) {
-            const grm_SymbolID *rhs = grm_get_pr_rhs(prule);
+            const good_SymbolID *rhs = grm_get_pr_rhs(prule);
             size_t rhs_len = grm_get_pr_rhs_len(prule);
             size_t i;
 
@@ -232,7 +232,7 @@ static int ffset_calc_flws_at(ffset_FollowSet *flws, ffset_FollowSetCalcFrame *f
 
     {
         ffset_FollowSetTableElem *elem;
-        grm_SymbolID *set;
+        good_SymbolID *set;
         size_t i;
         void *ret;
 
@@ -241,12 +241,12 @@ static int ffset_calc_flws_at(ffset_FollowSet *flws, ffset_FollowSetCalcFrame *f
             return 0;
         }
 
-        set = (grm_SymbolID *) calloc(frame->arr_fill_index - frame->arr_bottom_index, sizeof (grm_SymbolID));
+        set = (good_SymbolID *) calloc(frame->arr_fill_index - frame->arr_bottom_index, sizeof (good_SymbolID));
         if (set == NULL) {
             return 1;
         }
         for (i = frame->arr_bottom_index; i < frame->arr_fill_index; i++) {
-            const grm_SymbolID *sym;
+            const good_SymbolID *sym;
 
             sym = arr_get(flws->work.arr, i);
             if (sym == NULL) {

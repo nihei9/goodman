@@ -9,11 +9,11 @@ typedef struct ffset_FollowSet ffset_FollowSet;
 typedef struct ffset_FollowSetItem {
     struct {
         ffset_FollowSet *flws;
-        grm_SymbolID symbol;
+        good_SymbolID symbol;
     } input;
 
     struct {
-        grm_SymbolID *set;
+        good_SymbolID *set;
         size_t len;
         int has_eof;
     } output;

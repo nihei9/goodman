@@ -11,7 +11,7 @@ typedef struct good_Grammar {
     const grm_Grammar *prtbl;
 } good_Grammar;
 
-const good_Grammar *good_new_grammar_from_ast(const good_AST *root_ast, const grm_SymbolTable *symtbl);
+const good_Grammar *good_new_grammar_from_ast(const good_AST *root_ast, const good_SymbolTable *symtbl);
 void good_delete_grammar(good_Grammar *grammar);
 
 #endif

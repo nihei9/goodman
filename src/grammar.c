@@ -3,13 +3,13 @@
 #include <string.h>
 
 typedef struct grm_Grammar {
-	grm_SymbolTable *symtbl;
+	good_SymbolTable *symtbl;
 	grm_ProductionRuleTable *prtbl;
-	grm_SymbolType default_symbol_type;
-	grm_SymbolID start_symbol_id;
+	good_SymbolType default_symbol_type;
+	good_SymbolID start_symbol_id;
 
 	struct {
-		grm_SymbolID *rhs;
+		good_SymbolID *rhs;
 		size_t len;
 		unsigned int fill_index;
 	} pr_rhs_work;
@@ -24,15 +24,15 @@ typedef struct grm_Grammar {
 grm_Grammar *grm_new(void)
 {
 	grm_Grammar *grm = NULL;
-	grm_SymbolTable *symtbl = NULL;
+	good_SymbolTable *symtbl = NULL;
 	grm_ProductionRuleTable *prtbl = NULL;
-	grm_SymbolID *rhs = NULL;
+	good_SymbolID *rhs = NULL;
 	
 	grm = (grm_Grammar *) malloc(sizeof (grm_Grammar));
 	if (grm == NULL) {
 		goto FAILURE;
 	}
-	symtbl = grm_new_symtbl();
+	symtbl = good_new_symtbl();
 	if (symtbl == NULL) {
 		goto FAILURE;
 	}
@@ -40,14 +40,14 @@ grm_Grammar *grm_new(void)
 	if (prtbl == NULL) {
 		goto FAILURE;
 	}
-	rhs = (grm_SymbolID *) malloc(sizeof (grm_SymbolID) * RHS_WORK_INITIAL_SIZE);
+	rhs = (good_SymbolID *) malloc(sizeof (good_SymbolID) * RHS_WORK_INITIAL_SIZE);
 	if (rhs == NULL) {
 		goto FAILURE;
 	}
 	
 	grm->symtbl = symtbl;
 	grm->prtbl = prtbl;
-	grm->default_symbol_type = grm_SYMTYPE_TERMINAL;
+	grm->default_symbol_type = good_SYMTYPE_TERMINAL;
 	grm->pr_rhs_work.rhs = rhs;
 	grm->pr_rhs_work.len = RHS_WORK_INITIAL_SIZE;
 	grm->pr_rhs_work.fill_index = 0;
@@ -57,7 +57,7 @@ grm_Grammar *grm_new(void)
 FAILURE:
 	free(grm);
 	grm = NULL;
-	grm_delete_symtbl(symtbl);
+	good_delete_symtbl(symtbl);
 	symtbl = NULL;
 	grm_delete_prtbl(prtbl);
 	prtbl = NULL;
@@ -76,7 +76,7 @@ void grm_delete(grm_Grammar *grm)
 		return;
 	}
 	
-	grm_delete_symtbl(grm->symtbl);
+	good_delete_symtbl(grm->symtbl);
 	grm->symtbl = NULL;
 	grm_delete_prtbl(grm->prtbl);
 	grm->prtbl = NULL;
@@ -89,7 +89,7 @@ void grm_delete(grm_Grammar *grm)
 /*
  * デフォルトのSymbolTypeを取得する。
  */
-grm_SymbolType grm_get_default_symbol_type(const grm_Grammar *grm)
+good_SymbolType grm_get_default_symbol_type(const grm_Grammar *grm)
 {
 	return grm->default_symbol_type;
 }
@@ -97,9 +97,9 @@ grm_SymbolType grm_get_default_symbol_type(const grm_Grammar *grm)
 /*
  * typeをデフォルトのSymbolTypeとして設定する。戻り値は設定変更前の値となる。
  */
-grm_SymbolType grm_set_default_symbol_type(grm_Grammar *grm, grm_SymbolType type)
+good_SymbolType grm_set_default_symbol_type(grm_Grammar *grm, good_SymbolType type)
 {
-	grm_SymbolType before_type = grm->default_symbol_type;
+	good_SymbolType before_type = grm->default_symbol_type;
 
 	grm->default_symbol_type = type;
 
@@ -109,31 +109,31 @@ grm_SymbolType grm_set_default_symbol_type(grm_Grammar *grm, grm_SymbolType type
 /*
  * symbolをIDへ変換する。SymbolTypeはデフォルト値が使用される。
  */
-const grm_SymbolID *grm_put_symbol(grm_Grammar *grm, const char *symbol)
+const good_SymbolID *grm_put_symbol(grm_Grammar *grm, const char *symbol)
 {
-	return grm_put_in_symtbl(grm->symtbl, symbol, grm->default_symbol_type);
+	return good_put_in_symtbl(grm->symtbl, symbol, grm->default_symbol_type);
 }
 
 /*
  * symbolをIDへ変換する。SymbolTypeはtypeで指定されたものとなる。
  */
-const grm_SymbolID *grm_put_symbol_as(grm_Grammar *grm, const char *symbol, grm_SymbolType type)
+const good_SymbolID *grm_put_symbol_as(grm_Grammar *grm, const char *symbol, good_SymbolType type)
 {
-	return grm_put_in_symtbl(grm->symtbl, symbol, type);
+	return good_put_in_symtbl(grm->symtbl, symbol, type);
 }
 
 /*
  * idに対応する記号の文字列表現を取得する。
  */
-const char *grm_lookup_symbol(const grm_Grammar *grm, grm_SymbolID id)
+const char *grm_lookup_symbol(const grm_Grammar *grm, good_SymbolID id)
 {
-	return grm_lookup_in_symtbl(grm->symtbl, id);
+	return good_lookup_in_symtbl(grm->symtbl, id);
 }
 
 /*
  * idを開始記号として登録する。
  */
-grm_SymbolID grm_set_start_symbol(grm_Grammar *grm, grm_SymbolID id)
+good_SymbolID grm_set_start_symbol(grm_Grammar *grm, good_SymbolID id)
 {
 	grm->start_symbol_id = id;
 
@@ -144,7 +144,7 @@ grm_SymbolID grm_set_start_symbol(grm_Grammar *grm, grm_SymbolID id)
  * 開始記号を取得する。
  * この関数は必ず grm_set_start_symbol() で開始記号を登録した後に呼ぶこと。
  */
-grm_SymbolID grm_get_start_symbol(const grm_Grammar *grm)
+good_SymbolID grm_get_start_symbol(const grm_Grammar *grm)
 {
 	return grm->start_symbol_id;
 }
@@ -162,18 +162,18 @@ size_t grm_get_num_of_prule(const grm_Grammar *grm)
  */
 int grm_append_prule(grm_Grammar *grm, const char *lhs, const char *rhs[], size_t rhs_len)
 {
-	const grm_SymbolID *tmp_lhs_id;
-	grm_SymbolID lhs_id;
+	const good_SymbolID *tmp_lhs_id;
+	good_SymbolID lhs_id;
 	unsigned int i;
 	int ret;
 
 	if (grm->pr_rhs_work.len < rhs_len) {
-		grm_SymbolID *new_rhs;
+		good_SymbolID *new_rhs;
 		const size_t deficient_len = rhs_len - grm->pr_rhs_work.len;
 		const size_t deficient_step = deficient_len / RHS_WORK_STEP_SIZE + (deficient_len % RHS_WORK_STEP_SIZE > 0)? 1 : 0;
 		const size_t new_len = grm->pr_rhs_work.len + deficient_step * RHS_WORK_STEP_SIZE;
 
-		new_rhs = (grm_SymbolID *) realloc(grm->pr_rhs_work.rhs, sizeof (grm_SymbolID) * new_len);
+		new_rhs = (good_SymbolID *) realloc(grm->pr_rhs_work.rhs, sizeof (good_SymbolID) * new_len);
 		if (new_rhs == NULL) {
 			return 1;
 		}
@@ -188,7 +188,7 @@ int grm_append_prule(grm_Grammar *grm, const char *lhs, const char *rhs[], size_
 	lhs_id = *tmp_lhs_id;
 
 	for (i = 0; i < rhs_len; i++) {
-		const grm_SymbolID *id;
+		const good_SymbolID *id;
 
 		id = grm_put_symbol(grm, rhs[i]);
 		if (id == NULL) {
@@ -220,7 +220,7 @@ const grm_ProductionRule *grm_find_prule_by_id(const grm_Grammar *grm, unsigned 
 /*
  * 指定の左辺値を持つ生成規則を取得する。
  */
-grm_ProductionRuleFilter *grm_find_prule_by_lhs(const grm_Grammar *grm, grm_SymbolID lhs, grm_ProductionRuleFilter *filter)
+grm_ProductionRuleFilter *grm_find_prule_by_lhs(const grm_Grammar *grm, good_SymbolID lhs, grm_ProductionRuleFilter *filter)
 {
 	return grm_set_pr_filter_by_lhs(filter, lhs);
 }

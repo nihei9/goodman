@@ -32,10 +32,10 @@ struct good_Tokenizer {
 
     good_Token tkn;
 
-    grm_SymbolTable *symtbl;
+    good_SymbolTable *symtbl;
 };
 
-good_Tokenizer *good_new_tokenizer(FILE *target, grm_SymbolTable *symtbl)
+good_Tokenizer *good_new_tokenizer(FILE *target, good_SymbolTable *symtbl)
 {
     good_Tokenizer *tknzr = NULL;
     char *str = NULL;
@@ -117,7 +117,7 @@ static const good_Token *good_tokenize(good_Tokenizer *tknzr)
     tkn.pos = c.pos;
 
     if (good_is_name_letter(c.c)) {
-        const grm_SymbolID *id;
+        const good_SymbolID *id;
         size_t i = 0;
 
         do {
@@ -128,7 +128,7 @@ static const good_Token *good_tokenize(good_Tokenizer *tknzr)
         tknzr->work.str[i] = '\0';
 
         // 第３引数はtokenizerにおいては使用しないので、何を設定しても無関係。
-        id = grm_put_in_symtbl(tknzr->symtbl, tknzr->work.str, grm_SYMTYPE_TERMINAL);
+        id = good_put_in_symtbl(tknzr->symtbl, tknzr->work.str, good_SYMTYPE_TERMINAL);
         if (id == NULL) {
             return NULL;
         }
@@ -154,7 +154,7 @@ static const good_Token *good_tokenize(good_Tokenizer *tknzr)
         goto RETURN;
     }
     if (c.c == '\'') {
-        const grm_SymbolID *id;
+        const good_SymbolID *id;
         size_t i = 0;
 
         do {
@@ -172,7 +172,7 @@ static const good_Token *good_tokenize(good_Tokenizer *tknzr)
         }
 
         // 第３引数はtokenizerにおいては使用しないので、何を設定しても無関係。
-        id = grm_put_in_symtbl(tknzr->symtbl, tknzr->work.str, grm_SYMTYPE_TERMINAL);
+        id = good_put_in_symtbl(tknzr->symtbl, tknzr->work.str, good_SYMTYPE_TERMINAL);
         if (id == NULL) {
             return NULL;
         }

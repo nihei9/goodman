@@ -3,6 +3,7 @@
 
 #include "ast.h"
 #include "grammar.h"
+#include "production_rules.h"
 #include "collections.h"
 #include <stdlib.h>
 
@@ -10,6 +11,7 @@ typedef struct good_Grammar {
     const syms_SymbolStore *syms;
     syms_SymbolID terminal_symbol_id_from;
     syms_SymbolID terminal_symbol_id_to;
+    good_ProductionRules *prules;
 
     const grm_Grammar *prtbl;
 } good_Grammar;

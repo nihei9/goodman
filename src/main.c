@@ -87,7 +87,7 @@ static int good_execute(const good_GoodmanParameters *params)
         goto END;
     }
 
-    grammar = good_new_grammar_from_ast(ast, syms);
+    grammar = good_new_grammar((good_AST *) ast, syms);
     if (grammar == NULL) {
         printf("Failed to create grammar.\n");
 

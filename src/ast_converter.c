@@ -7,7 +7,7 @@ static const good_TerminalSymbolTable *good_new_tsymtbl_from_ast(const good_AST 
 static const grm_Grammar *good_new_prtbl_from_ast(const good_AST *root_ast, const syms_SymbolStore *syms);
 static int good_is_terminal_symbol_def(const good_AST *prule_ast);
 
-const good_Grammar *good_new_grammar_from_ast(const good_AST *root_ast, const syms_SymbolStore *syms)
+const good_Grammar *good_new_grammar(good_AST *root_ast, const syms_SymbolStore *syms)
 {
     good_Grammar *grammar = NULL;
     const good_TerminalSymbolTable *tsymtbl = NULL;

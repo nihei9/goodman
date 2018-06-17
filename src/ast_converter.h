@@ -12,7 +12,7 @@ typedef struct good_Grammar {
     const grm_Grammar *prtbl;
 } good_Grammar;
 
-const good_Grammar *good_new_grammar_from_ast(const good_AST *root_ast, const syms_SymbolStore *syms);
+const good_Grammar *good_new_grammar(good_AST *root_ast, const syms_SymbolStore *syms);
 void good_delete_grammar(good_Grammar *grammar);
 
 #endif

@@ -96,6 +96,8 @@ static int good_execute(const good_GoodmanParameters *params)
 
     good_print_grammar(grammar);
 
+    return 0;
+
 END:
     good_delete_grammar((good_Grammar *) grammar);
     good_delete_ast((good_AST *) ast);

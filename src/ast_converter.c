@@ -3,18 +3,21 @@
 
 #define MAX_RHS_LEN 1024
 
-static const good_TerminalSymbolTable *good_new_tsymtbl_from_ast(const good_AST *root_ast, const syms_SymbolStore *syms);
+static int good_put_symbols(syms_SymbolStore *syms, syms_SymbolID *min_tsym_id, syms_SymbolID *max_tsym_id, const good_AST *root_ast, const syms_SymbolStore *ast_syms);
 static const grm_Grammar *good_new_prtbl_from_ast(const good_AST *root_ast, const syms_SymbolStore *syms);
 static int good_is_terminal_symbol_def(const good_AST *prule_ast);
 
-const good_Grammar *good_new_grammar(good_AST *root_ast, const syms_SymbolStore *syms)
+const good_Grammar *good_new_grammar(good_AST *root_ast, const syms_SymbolStore *ast_syms)
 {
     good_Grammar *grammar = NULL;
-    const good_TerminalSymbolTable *tsymtbl = NULL;
+    syms_SymbolStore *syms = NULL;
+    syms_SymbolID min_tsym_id;
+    syms_SymbolID max_tsym_id;
+    int ret;
     const grm_Grammar *prtbl = NULL;
     const good_AST *ret_ast;
     
-    ret_ast = good_normalize_ast(root_ast, syms);
+    ret_ast = good_normalize_ast(root_ast, ast_syms);
     if (ret_ast == NULL) {
         goto FAILURE;
     }
@@ -24,42 +27,45 @@ const good_Grammar *good_new_grammar(good_AST *root_ast, const syms_SymbolStore 
         goto FAILURE;
     }
 
-    tsymtbl = good_new_tsymtbl_from_ast(root_ast, syms);
-    if (tsymtbl == NULL) {
+    syms = syms_new();
+    if (syms == NULL) {
         goto FAILURE;
     }
 
-    prtbl = good_new_prtbl_from_ast(root_ast, syms);
+    ret = good_put_symbols(syms, &min_tsym_id, &max_tsym_id, root_ast, ast_syms);
+    if (ret != 0) {
+        goto FAILURE;
+    }
+
+    prtbl = good_new_prtbl_from_ast(root_ast, ast_syms);
     if (prtbl == NULL) {
         goto FAILURE;
     }
 
-    grammar->tsymtbl = tsymtbl;
+    grammar->syms = syms;
+
     grammar->prtbl = prtbl;
 
     return grammar;
 
 FAILURE:
     free(grammar);
-    good_delete_tsymtbl((good_TerminalSymbolTable *) tsymtbl);
+    syms_delete(syms);
     grm_delete((grm_Grammar *) prtbl);
 
     return NULL;
 }
 
-static const good_TerminalSymbolTable *good_new_tsymtbl_from_ast(const good_AST *root_ast, const syms_SymbolStore *syms)
+static int good_put_symbols(syms_SymbolStore *syms, syms_SymbolID *min_tsym_id, syms_SymbolID *max_tsym_id, const good_AST *root_ast, const syms_SymbolStore *ast_syms)
 {
-    good_TerminalSymbolTable *tsymtbl = NULL;
     const good_AST *prule_ast;
+    int is_first = 1;
 
-    tsymtbl = good_new_tsymtbl();
-    if (tsymtbl == NULL) {
-        goto FAILURE;
-    }
-
+    // 終端記号の定義のみを登録
     for (prule_ast = good_get_child(root_ast, PRULE_OFFSET); prule_ast != NULL; prule_ast = prule_ast->brother) {
         const good_AST *lhs_ast;
-        const good_AST *rhs_ast;
+        const char *lhs_str;
+        const syms_SymbolID *id;
 
         if (!good_is_terminal_symbol_def(prule_ast)) {
             continue;
@@ -67,37 +73,53 @@ static const good_TerminalSymbolTable *good_new_tsymtbl_from_ast(const good_AST 
 
         lhs_ast = good_get_child(prule_ast, LHS_OFFSET);
         if (lhs_ast == NULL) {
-            goto FAILURE;
+            return 1;
         }
 
-        for (rhs_ast = good_get_child(prule_ast, RHS_OFFSET); rhs_ast != NULL; rhs_ast = rhs_ast->brother) {
-            const good_AST *rhs_elem_ast;
-            const char *rhs_elem_str;
-            int ret;
+        lhs_str = syms_lookup(ast_syms, lhs_ast->token.value.symbol_id);
+        if (lhs_str == NULL) {
+            return 1;
+        }
 
-            rhs_elem_ast = good_get_child(rhs_ast, RHS_ELEM_OFFSET);
-            if (rhs_elem_ast == NULL) {
-                goto FAILURE;
-            }
+        id = syms_put(syms, lhs_str);
+        if (id == NULL) {
+            return 1;
+        }
 
-            rhs_elem_str = syms_lookup(syms, rhs_elem_ast->token.value.symbol_id);
-            if (rhs_elem_str == NULL) {
-                goto FAILURE;
-            }
+        if (is_first) {
+            *min_tsym_id = *id;
+            is_first = 0;
+        }
+        *max_tsym_id = *id;
+    }
 
-            ret = good_put_tsym(tsymtbl, lhs_ast->token.value.symbol_id, rhs_elem_str);
-            if (ret != 0) {
-                goto FAILURE;
-            }
+    // 非終端記号の定義のみを登録
+    for (prule_ast = good_get_child(root_ast, PRULE_OFFSET); prule_ast != NULL; prule_ast = prule_ast->brother) {
+        const good_AST *lhs_ast;
+        const char *lhs_str;
+        const syms_SymbolID *id;
+
+        if (good_is_terminal_symbol_def(prule_ast)) {
+            continue;
+        }
+
+        lhs_ast = good_get_child(prule_ast, LHS_OFFSET);
+        if (lhs_ast == NULL) {
+            return 1;
+        }
+
+        lhs_str = syms_lookup(ast_syms, lhs_ast->token.value.symbol_id);
+        if (lhs_str == NULL) {
+            return 1;
+        }
+
+        id = syms_put(syms, lhs_str);
+        if (id == NULL) {
+            return 1;
         }
     }
 
-    return tsymtbl;
-
-FAILURE:
-    good_delete_tsymtbl(tsymtbl);
-
-    return NULL;
+    return 0;
 }
 
 static const grm_Grammar *good_new_prtbl_from_ast(const good_AST *root_ast, const syms_SymbolStore *syms)
@@ -205,8 +227,8 @@ void good_delete_grammar(good_Grammar *grammar)
         return;
     }
 
-    good_delete_tsymtbl((good_TerminalSymbolTable *) grammar->tsymtbl);
-    grammar->tsymtbl = NULL;
+    syms_delete(grammar->syms);
+    grammar->syms = NULL;
     grm_delete((grm_Grammar *) grammar->prtbl);
     grammar->prtbl = NULL;
     free(grammar);

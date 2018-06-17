@@ -2,13 +2,15 @@
 #define good_AST_CONVERTER_H
 
 #include "ast.h"
-#include "terminal_symbol_table.h"
 #include "grammar.h"
 #include "collections.h"
 #include <stdlib.h>
 
 typedef struct good_Grammar {
-    const good_TerminalSymbolTable *tsymtbl;
+    const syms_SymbolStore *syms;
+    syms_SymbolID terminal_symbol_id_from;
+    syms_SymbolID terminal_symbol_id_to;
+
     const grm_Grammar *prtbl;
 } good_Grammar;
 

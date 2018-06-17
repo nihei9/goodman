@@ -35,41 +35,41 @@ static void test_symbols(connie_Connie *c)
 	{
 		good_SymbolType type;
 
-		type = grm_set_default_symbol_type(grm, grm_SYMTYPE_NON_TERMINAL);
-		// grm_new()直後のデフォルト値はgrm_SYMTYPE_TERMINALとなること。
-		A_EQL_INT(c, grm_SYMTYPE_TERMINAL, type);
+		type = grm_set_default_symbol_type(grm, good_SYMTYPE_NON_TERMINAL);
+		// grm_new()直後のデフォルト値はgood_SYMTYPE_TERMINALとなること。
+		A_EQL_INT(c, good_SYMTYPE_TERMINAL, type);
 
-		type = grm_set_default_symbol_type(grm, grm_SYMTYPE_TERMINAL);
-		// 前段の処理で設定したgrm_SYMTYPE_NON_TERMINALが返されること。
-		A_EQL_INT(c, grm_SYMTYPE_NON_TERMINAL, type);
+		type = grm_set_default_symbol_type(grm, good_SYMTYPE_TERMINAL);
+		// 前段の処理で設定したgood_SYMTYPE_NON_TERMINALが返されること。
+		A_EQL_INT(c, good_SYMTYPE_NON_TERMINAL, type);
 
 		type = grm_get_default_symbol_type(grm);
-		// 前段の処理で設定したgrm_SYMTYPE_TERMINALが返されること。
-		A_EQL_INT(c, grm_SYMTYPE_TERMINAL, type);
+		// 前段の処理で設定したgood_SYMTYPE_TERMINALが返されること。
+		A_EQL_INT(c, good_SYMTYPE_TERMINAL, type);
 	}
 
 	{
-		put_symbol_as(c, grm, "NON-TERMINAL-1", grm_SYMTYPE_NON_TERMINAL);
-		put_symbol_as(c, grm, "NON-TERMINAL-2", grm_SYMTYPE_NON_TERMINAL);
-		put_symbol_as(c, grm, "NON-TERMINAL-3", grm_SYMTYPE_NON_TERMINAL);
-		put_symbol_as(c, grm, "NON-TERMINAL-4", grm_SYMTYPE_NON_TERMINAL);
-		put_symbol_as(c, grm, "NON-TERMINAL-5", grm_SYMTYPE_NON_TERMINAL);
-		put_symbol_as(c, grm, "NON-TERMINAL-6", grm_SYMTYPE_NON_TERMINAL);
-		put_symbol_as(c, grm, "NON-TERMINAL-7", grm_SYMTYPE_NON_TERMINAL);
-		put_symbol_as(c, grm, "NON-TERMINAL-8", grm_SYMTYPE_NON_TERMINAL);
-		put_symbol_as(c, grm, "NON-TERMINAL-9", grm_SYMTYPE_NON_TERMINAL);
+		put_symbol_as(c, grm, "NON-TERMINAL-1", good_SYMTYPE_NON_TERMINAL);
+		put_symbol_as(c, grm, "NON-TERMINAL-2", good_SYMTYPE_NON_TERMINAL);
+		put_symbol_as(c, grm, "NON-TERMINAL-3", good_SYMTYPE_NON_TERMINAL);
+		put_symbol_as(c, grm, "NON-TERMINAL-4", good_SYMTYPE_NON_TERMINAL);
+		put_symbol_as(c, grm, "NON-TERMINAL-5", good_SYMTYPE_NON_TERMINAL);
+		put_symbol_as(c, grm, "NON-TERMINAL-6", good_SYMTYPE_NON_TERMINAL);
+		put_symbol_as(c, grm, "NON-TERMINAL-7", good_SYMTYPE_NON_TERMINAL);
+		put_symbol_as(c, grm, "NON-TERMINAL-8", good_SYMTYPE_NON_TERMINAL);
+		put_symbol_as(c, grm, "NON-TERMINAL-9", good_SYMTYPE_NON_TERMINAL);
 
-		put_symbol(c, grm, "TERMINAL-1", grm_SYMTYPE_TERMINAL);
-		put_symbol(c, grm, "TERMINAL-2", grm_SYMTYPE_TERMINAL);
-		put_symbol(c, grm, "TERMINAL-3", grm_SYMTYPE_TERMINAL);
-		put_symbol(c, grm, "TERMINAL-4", grm_SYMTYPE_TERMINAL);
-		put_symbol(c, grm, "TERMINAL-5", grm_SYMTYPE_TERMINAL);
-		put_symbol(c, grm, "TERMINAL-6", grm_SYMTYPE_TERMINAL);
-		put_symbol(c, grm, "TERMINAL-7", grm_SYMTYPE_TERMINAL);
-		put_symbol(c, grm, "TERMINAL-8", grm_SYMTYPE_TERMINAL);
-		put_symbol(c, grm, "TERMINAL-9", grm_SYMTYPE_TERMINAL);
+		put_symbol(c, grm, "TERMINAL-1", good_SYMTYPE_TERMINAL);
+		put_symbol(c, grm, "TERMINAL-2", good_SYMTYPE_TERMINAL);
+		put_symbol(c, grm, "TERMINAL-3", good_SYMTYPE_TERMINAL);
+		put_symbol(c, grm, "TERMINAL-4", good_SYMTYPE_TERMINAL);
+		put_symbol(c, grm, "TERMINAL-5", good_SYMTYPE_TERMINAL);
+		put_symbol(c, grm, "TERMINAL-6", good_SYMTYPE_TERMINAL);
+		put_symbol(c, grm, "TERMINAL-7", good_SYMTYPE_TERMINAL);
+		put_symbol(c, grm, "TERMINAL-8", good_SYMTYPE_TERMINAL);
+		put_symbol(c, grm, "TERMINAL-9", good_SYMTYPE_TERMINAL);
 
-		put_symbol(c, grm, "NON-TERMINAL-1", grm_SYMTYPE_NON_TERMINAL);
+		put_symbol(c, grm, "NON-TERMINAL-1", good_SYMTYPE_NON_TERMINAL);
 	}
 
 	grm_delete(grm);
@@ -84,7 +84,7 @@ static void test_prules(connie_Connie *c)
 	grm = grm_new();
 	A_NOT_NULL(c, grm);
 
-	grm_set_default_symbol_type(grm, grm_SYMTYPE_TERMINAL);
+	grm_set_default_symbol_type(grm, good_SYMTYPE_TERMINAL);
 	grm_put_symbol(grm, "id");
 	grm_put_symbol(grm, "+");
 	grm_put_symbol(grm, "*");
@@ -100,7 +100,7 @@ static void test_prules(connie_Connie *c)
         const char *rhs_F_2[] = {"id"};
 		int ret;
 
-        grm_set_default_symbol_type(grm, grm_SYMTYPE_NON_TERMINAL);
+        grm_set_default_symbol_type(grm, good_SYMTYPE_NON_TERMINAL);
         ret = grm_append_prule(grm, "E", rhs_E_1, LEN(rhs_E_1));
 		A_EQL_INT(c, 0, ret);
         ret = grm_append_prule(grm, "E", rhs_E_2, LEN(rhs_E_2));
@@ -242,7 +242,7 @@ static void put_symbol_as(connie_Connie *c, grm_Grammar *grm, const char *symbol
 	A_NOT_NULL(c, id);
 
 	t = good_get_symbol_type(*id);
-	A_EQL_INT(c, grm_SYMTYPE_NON_TERMINAL, t);
+	A_EQL_INT(c, good_SYMTYPE_NON_TERMINAL, t);
 
 	s = grm_lookup_symbol(grm, *id);
 	A_NOT_NULL(c, s);

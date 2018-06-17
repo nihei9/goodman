@@ -36,14 +36,14 @@ void test_firstset(connie_Connie *c)
 
         grm = grm_new();
 
-        grm_set_default_symbol_type(grm, grm_SYMTYPE_TERMINAL);
+        grm_set_default_symbol_type(grm, good_SYMTYPE_TERMINAL);
         grm_put_symbol(grm, "id");
         grm_put_symbol(grm, "+");
         grm_put_symbol(grm, "*");
         grm_put_symbol(grm, "(");
         grm_put_symbol(grm, ")");
 
-        grm_set_default_symbol_type(grm, grm_SYMTYPE_NON_TERMINAL);
+        grm_set_default_symbol_type(grm, good_SYMTYPE_NON_TERMINAL);
         grm_append_prule(grm, "E", rhs_E_1, RHS_LEN(rhs_E_1));
         grm_append_prule(grm, "E", rhs_E_2, RHS_LEN(rhs_E_2));
         grm_append_prule(grm, "T", rhs_T_1, RHS_LEN(rhs_T_1));

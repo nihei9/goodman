@@ -4,9 +4,46 @@
 #include "tokenizer.h"
 #include <stdio.h>
 
+typedef struct good_GoodmanParameters {
+    const char *filename;
+} good_GoodmanParameters;
+
+static int good_parse_parameters(good_GoodmanParameters *params, int argc, const char *argv[]);
+static int good_execute(const good_GoodmanParameters *params);
 static void good_print_grammar(const good_Grammar *grammar);
 
 int main(int argc, const char *argv[])
+{
+    good_GoodmanParameters params;
+    int ret;
+
+    ret = good_parse_parameters(&params, argc, argv);
+    if (ret != 0) {
+        return 1;
+    }
+
+    ret = good_execute(&params);
+    if (ret != 0) {
+        return 1;
+    }
+
+    return 0;
+}
+
+static int good_parse_parameters(good_GoodmanParameters *params, int argc, const char *argv[])
+{
+    if (argc <= 1) {
+        printf("Target files are missing.\n");
+
+        return 1;
+    }
+
+    params->filename = argv[1];
+
+    return 0;
+}
+
+static int good_execute(const good_GoodmanParameters *params)
 {
     const good_Grammar *grammar = NULL;
     const good_AST *ast = NULL;
@@ -14,20 +51,11 @@ int main(int argc, const char *argv[])
     good_Tokenizer *tknzr = NULL;
     good_SymbolTable *symtbl = NULL;
     FILE *target = NULL;
-    int rc = 0;
-
-    if (argc <= 1) {
-        printf("Target files are missing.\n");
-
-        rc = 1;
-        goto END;
-    }
     
-    target = fopen(argv[1], "r");
+    target = fopen(params->filename, "r");
     if (target == NULL) {
-        printf("Failed to open '%s'.\n", argv[1]);
+        printf("Failed to open '%s'.\n", params->filename);
 
-        rc = 1;
         goto END;
     }
 
@@ -35,23 +63,20 @@ int main(int argc, const char *argv[])
     if (symtbl == NULL) {
         printf("Failed to create symbol table.\n");
 
-        rc = 1;
         goto END;
     }
 
     tknzr = good_new_tokenizer(target, symtbl);
     if (tknzr == NULL) {
         printf("Failed to create tokenizer.\n");
-        
-        rc = 1;
+
         goto END;
     }
 
     psr = good_new_parser(tknzr);
     if (psr == NULL) {
         printf("Failed to create parser.\n");
-        
-        rc = 1;
+
         goto END;
     }
 
@@ -59,7 +84,6 @@ int main(int argc, const char *argv[])
     if (ast == NULL) {
         printf("Failed to parse.\n");
 
-        rc = 1;
         goto END;
     }
 
@@ -67,11 +91,12 @@ int main(int argc, const char *argv[])
     if (grammar == NULL) {
         printf("Failed to create grammar.\n");
 
-        rc = 1;
         goto END;
     }
 
     good_print_grammar(grammar);
+
+    return 0;
 
 END:
     good_delete_grammar((good_Grammar *) grammar);
@@ -83,7 +108,7 @@ END:
         fclose(target);
     }
     
-    return rc;
+    return 1;
 }
 
 static void good_print_grammar(const good_Grammar *grammar)

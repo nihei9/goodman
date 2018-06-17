@@ -3,18 +3,18 @@
 
 #define MAX_RHS_LEN 1024
 
-static const good_TerminalSymbolTable *good_new_tsymtbl_from_ast(const good_AST *root_ast, const good_SymbolTable *symtbl);
-static const grm_Grammar *good_new_prtbl_from_ast(const good_AST *root_ast, const good_SymbolTable *symtbl);
+static const good_TerminalSymbolTable *good_new_tsymtbl_from_ast(const good_AST *root_ast, const syms_SymbolStore *syms);
+static const grm_Grammar *good_new_prtbl_from_ast(const good_AST *root_ast, const syms_SymbolStore *syms);
 static int good_is_terminal_symbol_def(const good_AST *prule_ast);
 
-const good_Grammar *good_new_grammar_from_ast(const good_AST *root_ast, const good_SymbolTable *symtbl)
+const good_Grammar *good_new_grammar_from_ast(const good_AST *root_ast, const syms_SymbolStore *syms)
 {
     good_Grammar *grammar = NULL;
     const good_TerminalSymbolTable *tsymtbl = NULL;
     const grm_Grammar *prtbl = NULL;
     const good_AST *ret_ast;
     
-    ret_ast = good_normalize_ast(root_ast, symtbl);
+    ret_ast = good_normalize_ast(root_ast, syms);
     if (ret_ast == NULL) {
         goto FAILURE;
     }
@@ -24,12 +24,12 @@ const good_Grammar *good_new_grammar_from_ast(const good_AST *root_ast, const go
         goto FAILURE;
     }
 
-    tsymtbl = good_new_tsymtbl_from_ast(root_ast, symtbl);
+    tsymtbl = good_new_tsymtbl_from_ast(root_ast, syms);
     if (tsymtbl == NULL) {
         goto FAILURE;
     }
 
-    prtbl = good_new_prtbl_from_ast(root_ast, symtbl);
+    prtbl = good_new_prtbl_from_ast(root_ast, syms);
     if (prtbl == NULL) {
         goto FAILURE;
     }
@@ -47,7 +47,7 @@ FAILURE:
     return NULL;
 }
 
-static const good_TerminalSymbolTable *good_new_tsymtbl_from_ast(const good_AST *root_ast, const good_SymbolTable *symtbl)
+static const good_TerminalSymbolTable *good_new_tsymtbl_from_ast(const good_AST *root_ast, const syms_SymbolStore *syms)
 {
     good_TerminalSymbolTable *tsymtbl = NULL;
     const good_AST *prule_ast;
@@ -80,7 +80,7 @@ static const good_TerminalSymbolTable *good_new_tsymtbl_from_ast(const good_AST 
                 goto FAILURE;
             }
 
-            rhs_elem_str = good_lookup_in_symtbl(symtbl, rhs_elem_ast->token.value.symbol_id);
+            rhs_elem_str = syms_lookup(syms, rhs_elem_ast->token.value.symbol_id);
             if (rhs_elem_str == NULL) {
                 goto FAILURE;
             }
@@ -100,7 +100,7 @@ FAILURE:
     return NULL;
 }
 
-static const grm_Grammar *good_new_prtbl_from_ast(const good_AST *root_ast, const good_SymbolTable *symtbl)
+static const grm_Grammar *good_new_prtbl_from_ast(const good_AST *root_ast, const syms_SymbolStore *syms)
 {
     grm_Grammar *prtbl = NULL;
     const good_AST *prule_ast;
@@ -129,7 +129,7 @@ static const grm_Grammar *good_new_prtbl_from_ast(const good_AST *root_ast, cons
         if (lhs_ast == NULL) {
             goto FAILURE;
         }
-        lhs_str = good_lookup_in_symtbl(symtbl, lhs_ast->token.value.symbol_id);
+        lhs_str = syms_lookup(syms, lhs_ast->token.value.symbol_id);
         if (lhs_str == NULL) {
             goto FAILURE;
         }
@@ -157,7 +157,7 @@ static const grm_Grammar *good_new_prtbl_from_ast(const good_AST *root_ast, cons
         if (lhs_ast == NULL) {
             goto FAILURE;
         }
-        lhs_str = good_lookup_in_symtbl(symtbl, lhs_ast->token.value.symbol_id);
+        lhs_str = syms_lookup(syms, lhs_ast->token.value.symbol_id);
         if (lhs_str == NULL) {
             goto FAILURE;
         }
@@ -174,7 +174,7 @@ static const grm_Grammar *good_new_prtbl_from_ast(const good_AST *root_ast, cons
                     goto FAILURE;
                 }
 
-                rhs_elem_str = good_lookup_in_symtbl(symtbl, rhs_elem_ast->token.value.symbol_id);
+                rhs_elem_str = syms_lookup(syms, rhs_elem_ast->token.value.symbol_id);
                 if (rhs_elem_str == NULL) {
                     goto FAILURE;
                 }

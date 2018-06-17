@@ -4,6 +4,7 @@
 #include "ast.h"
 #include "terminal_symbol_table.h"
 #include "grammar.h"
+#include "collections.h"
 #include <stdlib.h>
 
 typedef struct good_Grammar {
@@ -11,7 +12,7 @@ typedef struct good_Grammar {
     const grm_Grammar *prtbl;
 } good_Grammar;
 
-const good_Grammar *good_new_grammar_from_ast(const good_AST *root_ast, const good_SymbolTable *symtbl);
+const good_Grammar *good_new_grammar_from_ast(const good_AST *root_ast, const syms_SymbolStore *syms);
 void good_delete_grammar(good_Grammar *grammar);
 
 #endif

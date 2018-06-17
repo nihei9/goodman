@@ -1,7 +1,7 @@
 #ifndef good_TOKEN_H
 #define good_TOKEN_H
 
-#include "symbol_table.h"
+#include "collections.h"
 #include <stdlib.h>
 
 typedef enum good_TokenType {
@@ -22,7 +22,7 @@ typedef struct good_Position {
 typedef struct good_Token {
     good_TokenType type;
     union {
-        good_SymbolID symbol_id;
+        syms_SymbolID symbol_id;
     } value;
 
     good_Position pos;

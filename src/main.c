@@ -49,7 +49,7 @@ static int good_execute(const good_GoodmanParameters *params)
     const good_AST *ast = NULL;
     good_Parser *psr = NULL;
     good_Tokenizer *tknzr = NULL;
-    good_SymbolTable *symtbl = NULL;
+    syms_SymbolStore *syms = NULL;
     FILE *target = NULL;
     
     target = fopen(params->filename, "r");
@@ -59,14 +59,14 @@ static int good_execute(const good_GoodmanParameters *params)
         goto END;
     }
 
-    symtbl = good_new_symtbl();
-    if (symtbl == NULL) {
-        printf("Failed to create symbol table.\n");
+    syms = syms_new();
+    if (syms == NULL) {
+        printf("Failed to create symbol store.\n");
 
         goto END;
     }
 
-    tknzr = good_new_tokenizer(target, symtbl);
+    tknzr = good_new_tokenizer(target, syms);
     if (tknzr == NULL) {
         printf("Failed to create tokenizer.\n");
 
@@ -87,7 +87,7 @@ static int good_execute(const good_GoodmanParameters *params)
         goto END;
     }
 
-    grammar = good_new_grammar_from_ast(ast, symtbl);
+    grammar = good_new_grammar_from_ast(ast, syms);
     if (grammar == NULL) {
         printf("Failed to create grammar.\n");
 
@@ -103,7 +103,7 @@ END:
     good_delete_ast((good_AST *) ast);
     good_delete_parser(psr);
     good_delete_tokenizer(tknzr);
-    good_delete_symtbl(symtbl);
+    syms_delete(syms);
     if (target != NULL) {
         fclose(target);
     }

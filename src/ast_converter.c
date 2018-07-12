@@ -6,7 +6,7 @@
 static int good_put_symbols(syms_SymbolStore *syms, syms_SymbolID *min_tsym_id, syms_SymbolID *max_tsym_id, const good_AST *root_ast, const syms_SymbolStore *ast_syms);
 static int good_put_prules(good_ProductionRules *prules, syms_SymbolStore *syms, const good_AST *root_ast, const syms_SymbolStore *ast_syms);
 static const grm_Grammar *good_new_prtbl_from_ast(const good_AST *root_ast, const syms_SymbolStore *syms);
-static int good_is_terminal_symbol_def(const good_AST *prule_ast);
+static int good_is_terminal_symbol_ast(const good_AST *prule_ast);
 
 const good_Grammar *good_new_grammar(good_AST *root_ast, const syms_SymbolStore *ast_syms)
 {
@@ -78,7 +78,7 @@ static int good_put_symbols(syms_SymbolStore *syms, syms_SymbolID *min_tsym_id, 
         const char *lhs_str;
         const syms_SymbolID *id;
 
-        if (!good_is_terminal_symbol_def(prule_ast)) {
+        if (!good_is_terminal_symbol_ast(prule_ast)) {
             continue;
         }
 
@@ -110,7 +110,7 @@ static int good_put_symbols(syms_SymbolStore *syms, syms_SymbolID *min_tsym_id, 
         const char *lhs_str;
         const syms_SymbolID *id;
 
-        if (good_is_terminal_symbol_def(prule_ast)) {
+        if (good_is_terminal_symbol_ast(prule_ast)) {
             continue;
         }
 
@@ -218,7 +218,7 @@ static const grm_Grammar *good_new_prtbl_from_ast(const good_AST *root_ast, cons
         const good_AST *lhs_ast;
         const char *lhs_str;
 
-        if (good_is_terminal_symbol_def(prule_ast)) {
+        if (good_is_terminal_symbol_ast(prule_ast)) {
             continue;
         }
 
@@ -311,7 +311,16 @@ void good_delete_grammar(good_Grammar *grammar)
     free(grammar);
 }
 
-static int good_is_terminal_symbol_def(const good_AST *prule_ast)
+int good_is_terminal_symbol_def(const good_Grammar *grammar, const syms_SymbolID id)
+{
+    if (id >= grammar->terminal_symbol_id_from && id <= grammar->terminal_symbol_id_to) {
+        return 1;
+    }
+
+    return 0;
+}
+
+static int good_is_terminal_symbol_ast(const good_AST *prule_ast)
 {
     const good_AST *rhs_ast;
 

@@ -7,7 +7,7 @@ static int good_put_symbols(syms_SymbolStore *syms, syms_SymbolID *min_tsym_id, 
 static int good_put_prules(good_ProductionRules *prules, syms_SymbolStore *syms, const good_AST *root_ast, const syms_SymbolStore *ast_syms);
 static int good_is_terminal_symbol_ast(const good_AST *prule_ast);
 
-const good_Grammar *good_new_grammar(good_AST *root_ast, const syms_SymbolStore *ast_syms)
+const good_Grammar *good_new_grammar(good_AST *root_ast, syms_SymbolStore *ast_syms)
 {
     good_Grammar *grammar = NULL;
     syms_SymbolStore *syms = NULL;
@@ -42,13 +42,15 @@ const good_Grammar *good_new_grammar(good_AST *root_ast, const syms_SymbolStore 
     }
     ret = good_put_prules(prules, syms, root_ast, ast_syms);
     if (ret != 0) {
-        return 1;
+        goto FAILURE;
     }
 
     grammar->syms = syms;
     grammar->terminal_symbol_id_from = min_tsym_id;
     grammar->terminal_symbol_id_to = max_tsym_id;
     grammar->prules = prules;
+    // NOTE 暫定的に最初の生成規則の左辺値を開始記号とみなす。
+    grammar->start_symbol = *syms_put(syms, syms_lookup(ast_syms, root_ast->child->child->token.value.symbol_id));
 
     return grammar;
 

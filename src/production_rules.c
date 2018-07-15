@@ -150,7 +150,7 @@ size_t good_get_prules_len(const good_ProductionRules *prules)
 	return prules->fill_index;
 }
 
-good_ProductionRuleFilter *good_set_pr_filter_by_id(good_ProductionRuleFilter *filter, unsigned int id)
+good_ProductionRuleFilter *good_set_prule_filter_by_id(good_ProductionRuleFilter *filter, unsigned int id)
 {
 	arr_Filter *f;
 
@@ -162,7 +162,7 @@ good_ProductionRuleFilter *good_set_pr_filter_by_id(good_ProductionRuleFilter *f
 	return filter;
 }
 
-good_ProductionRuleFilter *good_set_pr_filter_by_lhs(good_ProductionRuleFilter *filter, syms_SymbolID lhs)
+good_ProductionRuleFilter *good_set_prule_filter_by_lhs(good_ProductionRuleFilter *filter, syms_SymbolID lhs)
 {
 	arr_Filter *f;
 
@@ -174,7 +174,7 @@ good_ProductionRuleFilter *good_set_pr_filter_by_lhs(good_ProductionRuleFilter *
 	return filter;
 }
 
-good_ProductionRuleFilter *good_set_pr_filter_match_all(good_ProductionRuleFilter *filter)
+good_ProductionRuleFilter *good_set_prule_filter_match_all(good_ProductionRuleFilter *filter)
 {
 	arr_Filter *f;
 

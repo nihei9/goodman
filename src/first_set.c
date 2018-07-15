@@ -1,7 +1,7 @@
 #include "first_set.h"
 
 typedef struct ffset_FirstSetBranchElem {
-    good_SymbolID *set;
+    syms_SymbolID *set;
     size_t len;
 
     int has_calcurated;
@@ -34,11 +34,11 @@ typedef struct ffset_FirstSetCalcFrame {
     int already_caluclated;
 } ffset_FirstSetCalcFrame;
 
-static int ffset_setup_fsts_table(ffset_FirstSet *fsts, const grm_Grammar *grm);
+static int ffset_setup_fsts_table(ffset_FirstSet *fsts, const good_Grammar *grm);
 static void ffset_set_fsts_calc_frame(ffset_FirstSetCalcFrame *frame, unsigned int prule_id, size_t offset, size_t arr_bottom_index);
-static int ffset_calc_fsts_at(ffset_FirstSet *fsts, ffset_FirstSetCalcFrame *frame, const grm_Grammar *grm);
+static int ffset_calc_fsts_at(ffset_FirstSet *fsts, ffset_FirstSetCalcFrame *frame, const good_Grammar *grm);
 static int ffset_add_fsts(ffset_FirstSet *fsts, ffset_FirstSetCalcFrame *frame, unsigned int prule_id, size_t offset);
-static int ffset_push_fsts_symbol(ffset_FirstSet *fsts, ffset_FirstSetCalcFrame *frame, good_SymbolID symbol);
+static int ffset_push_fsts_symbol(ffset_FirstSet *fsts, ffset_FirstSetCalcFrame *frame, syms_SymbolID symbol);
 
 ffset_FirstSet *ffset_new_fsts(void)
 {
@@ -50,7 +50,7 @@ ffset_FirstSet *ffset_new_fsts(void)
         goto FAILURE;
     }
 
-    arr = arr_new(sizeof (good_SymbolID));
+    arr = arr_new(sizeof (syms_SymbolID));
     if (arr == NULL) {
         goto FAILURE;
     }
@@ -86,47 +86,42 @@ void ffset_delete_fsts(ffset_FirstSet *fsts)
     free(fsts);
 }
 
-int ffset_calc_fsts(ffset_FirstSet *fsts, const grm_Grammar *grm)
+int ffset_calc_fsts(ffset_FirstSet *fsts, const good_Grammar *grammar)
 {
     int ret;
 
     // FIRST集合を保持するテーブル領域を確保する。
-    ret = ffset_setup_fsts_table(fsts, grm);
+    ret = ffset_setup_fsts_table(fsts, grammar);
     if (ret != 0) {
         return 1;
     }
 
     // FIRST集合を計算する。
     {
-        grm_ProductionRuleFilter pr_filter_entity;
-        grm_ProductionRuleFilter *pr_filter;
-        const grm_ProductionRule *pr;
+        good_ProductionRuleFilter filter;
+        const good_ProductionRule *prule;
 
-        pr_filter = grm_set_pr_filter_match_all(&pr_filter_entity);
-        if (pr_filter == NULL) {
+        good_set_prule_filter_match_all(&filter);
+
+        prule = good_next_prule(&filter, grammar->prules);
+        if (prule == NULL) {
             return 1;
         }
-
-        pr = grm_next_prule(grm, pr_filter);
-        if (pr == NULL) {
-            return 1;
-        }
-        while (pr != NULL) {
-            const size_t rhs_len = grm_get_pr_rhs_len(pr);
+        while (prule != NULL) {
             size_t i;
 
-            for (i = 0; i < rhs_len; i++) {
+            for (i = 0; i < prule->rhs_len; i++) {
                 ffset_FirstSetCalcFrame frame;
                 int ret;
 
-                ffset_set_fsts_calc_frame(&frame, grm_get_pr_id(pr), i, 0);
-                ret = ffset_calc_fsts_at(fsts, &frame, grm);
+                ffset_set_fsts_calc_frame(&frame, prule->id, i, 0);
+                ret = ffset_calc_fsts_at(fsts, &frame, grammar);
                 if (ret != 0) {
                     return 1;
                 }
             }
 
-            pr = grm_next_prule(grm, pr_filter);
+            prule = good_next_prule(&filter, grammar->prules);
         }
     }
 
@@ -137,7 +132,7 @@ int ffset_get_fsts(ffset_FirstSetItem *item)
 {
     ffset_FirstSetTableElem *table_elem;
     ffset_FirstSetBranchElem *branch_elem;
-    good_SymbolID *tmp_set = NULL;
+    syms_SymbolID *tmp_set = NULL;
     size_t tmp_len = 0;
     int tmp_has_empty = 0;
 
@@ -159,10 +154,10 @@ int ffset_get_fsts(ffset_FirstSetItem *item)
     return 0;
 }
 
-static int ffset_setup_fsts_table(ffset_FirstSet *fsts, const grm_Grammar *grm)
+static int ffset_setup_fsts_table(ffset_FirstSet *fsts, const good_Grammar *grammar)
 {
     ffset_FirstSetTableElem *table = NULL;
-    const size_t table_len = grm_get_num_of_prule(grm);
+    const size_t table_len = good_get_prules_len(grammar->prules);
     ffset_FirstSetBranchElem *branch = NULL;
     size_t branch_len;
 
@@ -181,22 +176,18 @@ static int ffset_setup_fsts_table(ffset_FirstSet *fsts, const grm_Grammar *grm)
 
     branch_len = 0;
     {
-        grm_ProductionRuleFilter pr_filter_entity;
-        grm_ProductionRuleFilter *pr_filter;
-        const grm_ProductionRule *pr;
+        good_ProductionRuleFilter filter;
+        const good_ProductionRule *prule;
 
-        pr_filter = grm_set_pr_filter_match_all(&pr_filter_entity);
-        if (pr_filter == NULL) {
+        good_set_prule_filter_match_all(&filter);
+        prule = good_next_prule(&filter, grammar->prules);
+        if (prule == NULL) {
             goto FAILURE;
         }
-        pr = grm_next_prule(grm, pr_filter);
-        if (pr == NULL) {
-            goto FAILURE;
-        }
-        while (pr != NULL) {
-            branch_len += grm_get_pr_rhs_len(pr);
+        while (prule != NULL) {
+            branch_len += prule->rhs_len;
 
-            pr = grm_next_prule(grm, pr_filter);
+            prule = good_next_prule(&filter, grammar->prules);
         }
     }
 
@@ -225,34 +216,29 @@ static int ffset_setup_fsts_table(ffset_FirstSet *fsts, const grm_Grammar *grm)
      */
 
     {
-        grm_ProductionRuleFilter pr_filter_entity;
-        grm_ProductionRuleFilter *pr_filter;
-        const grm_ProductionRule *pr;
+        good_ProductionRuleFilter filter;
+        const good_ProductionRule *prule;
         size_t table_index;
         size_t branch_index;
 
-        pr_filter = grm_set_pr_filter_match_all(&pr_filter_entity);
-        if (pr_filter == NULL) {
-            goto FAILURE;
-        }
-        pr = grm_next_prule(grm, pr_filter);
-        if (pr == NULL) {
+        good_set_prule_filter_match_all(&filter);
+        prule = good_next_prule(&filter, grammar->prules);
+        if (prule == NULL) {
             goto FAILURE;
         }
         table_index = 0;
         branch_index = 0;
-        while (pr != NULL) {
+        while (prule != NULL) {
             ffset_FirstSetTableElem *tbl_elem = &table[table_index++];
-            const size_t rhs_len = grm_get_pr_rhs_len(pr);
 
-            if (rhs_len > 0) {
+            if (prule->rhs_len > 0) {
                 tbl_elem->head = &branch[branch_index];
-                tbl_elem->len = rhs_len;
+                tbl_elem->len = prule->rhs_len;
 
-                branch_index += rhs_len;
+                branch_index += prule->rhs_len;
             }
 
-            pr = grm_next_prule(grm, pr_filter);
+            prule = good_next_prule(&filter, grammar->prules);
         }
     }
 
@@ -277,12 +263,12 @@ static void ffset_set_fsts_calc_frame(ffset_FirstSetCalcFrame *frame, unsigned i
     frame->arr_bottom_index = arr_bottom_index;
 }
 
-static int ffset_calc_fsts_at(ffset_FirstSet *fsts, ffset_FirstSetCalcFrame *frame, const grm_Grammar *grm)
+static int ffset_calc_fsts_at(ffset_FirstSet *fsts, ffset_FirstSetCalcFrame *frame, const good_Grammar *grammar)
 {
     ffset_FirstSetTableElem *table_elem;
     ffset_FirstSetBranchElem *branch_elem;
-    const grm_ProductionRule *pr;
-    const good_SymbolID *rhs;
+    const good_ProductionRule *prule;
+    const syms_SymbolID *rhs;
 
     frame->arr_fill_index = frame->arr_bottom_index;
     frame->has_empty = 0;
@@ -295,26 +281,26 @@ static int ffset_calc_fsts_at(ffset_FirstSet *fsts, ffset_FirstSetCalcFrame *fra
         return 0;
     }
 
-    pr = grm_find_prule_by_id(grm, frame->prule_id);
-    if (pr == NULL) {
+    prule = good_get_prule(grammar->prules, frame->prule_id);
+    if (prule == NULL) {
         return 1;
     }
 
     /*
      * 計算対象の記号列が空規則の場合
      */
-    if (grm_get_pr_rhs_len(pr) <= 0 || grm_get_pr_rhs_len(pr) <= frame->offset) {
+    if (prule->rhs_len <= 0 || prule->rhs_len <= frame->offset) {
         frame->has_empty = 1;
 
         return 0;
     }
 
+    rhs = &prule->rhs[frame->offset];
+
     /*
      * 計算対象の記号列の先頭が終端記号の場合
      */
-    rhs = grm_get_pr_rhs(pr);
-    rhs = &rhs[frame->offset];
-    if (good_get_symbol_type(rhs[0]) == good_SYMTYPE_TERMINAL) {
+    if (rhs[0] >= grammar->terminal_symbol_id_from && rhs[0] <= grammar->terminal_symbol_id_to) {
         int ret;
 
         ret = ffset_push_fsts_symbol(fsts, frame, rhs[0]);
@@ -329,32 +315,26 @@ static int ffset_calc_fsts_at(ffset_FirstSet *fsts, ffset_FirstSetCalcFrame *fra
      * 計算対象の記号列の先頭が非終端記号の場合
      */
     {
-        grm_ProductionRuleFilter pr_filter_entity;
-        grm_ProductionRuleFilter *pr_filter;
-        const grm_ProductionRule *pr;
+        good_ProductionRuleFilter filter;
+        const good_ProductionRule *prule;
 
-        pr_filter = grm_find_prule_by_lhs(grm, rhs[0], &pr_filter_entity);
-        if (pr_filter == NULL) {
+        good_set_prule_filter_by_lhs(&filter, rhs[0]);
+        prule = good_next_prule(&filter, grammar->prules);
+        if (prule == NULL) {
             return 1;
         }
-        pr = grm_next_prule(grm, pr_filter);
-        if (pr == NULL) {
-            return 1;
-        }
-        while (pr != NULL) {
-            unsigned int prule_id;
+        while (prule != NULL) {
             ffset_FirstSetCalcFrame f;
             int ret;
 
             // ffset_calc_fsts_at()の無限再帰を避けるため、計算中の記号列と同じものは除外する。
-            prule_id = grm_get_pr_id(pr);
-            if (prule_id == frame->prule_id && frame->offset == 0) {
-                pr = grm_next_prule(grm, pr_filter);
+            if (prule->id == frame->prule_id && frame->offset == 0) {
+                prule = good_next_prule(&filter, grammar->prules);
                 continue;
             }
 
-            ffset_set_fsts_calc_frame(&f, grm_get_pr_id(pr), 0, frame->arr_fill_index);
-            ret = ffset_calc_fsts_at(fsts, &f, grm);
+            ffset_set_fsts_calc_frame(&f, prule->id, 0, frame->arr_fill_index);
+            ret = ffset_calc_fsts_at(fsts, &f, grammar);
             if (ret != 0) {
                 return 1;
             }
@@ -366,7 +346,7 @@ static int ffset_calc_fsts_at(ffset_FirstSet *fsts, ffset_FirstSetCalcFrame *fra
 
             if (f.has_empty != 0) {
                 ffset_set_fsts_calc_frame(&f, frame->prule_id, frame->offset + 1, frame->arr_fill_index);
-                ret = ffset_calc_fsts_at(fsts, &f, grm);
+                ret = ffset_calc_fsts_at(fsts, &f, grammar);
                 if (ret != 0) {
                     return 1;
                 }
@@ -377,21 +357,21 @@ static int ffset_calc_fsts_at(ffset_FirstSet *fsts, ffset_FirstSetCalcFrame *fra
                 }
             }
 
-            pr = grm_next_prule(grm, pr_filter);
+            prule = good_next_prule(&filter, grammar->prules);
         }
     }
 
 RETURN:
     if ((frame->arr_fill_index - frame->arr_bottom_index) > 0) {
-        good_SymbolID *set;
+        syms_SymbolID *set;
         size_t i;
 
-        set = (good_SymbolID *) calloc(frame->arr_fill_index - frame->arr_bottom_index, sizeof (good_SymbolID));
+        set = (syms_SymbolID *) calloc(frame->arr_fill_index - frame->arr_bottom_index, sizeof (syms_SymbolID));
         if (set == NULL) {
             return 1;
         }
         for (i = frame->arr_bottom_index; i < frame->arr_fill_index; i++) {
-            const good_SymbolID *sym;
+            const syms_SymbolID *sym;
 
             sym = arr_get(fsts->work.arr, i);
             if (sym == NULL) {
@@ -442,7 +422,7 @@ static int ffset_add_fsts(ffset_FirstSet *fsts, ffset_FirstSetCalcFrame *frame, 
     return 0;
 }
 
-static int ffset_push_fsts_symbol(ffset_FirstSet *fsts, ffset_FirstSetCalcFrame *frame, good_SymbolID symbol)
+static int ffset_push_fsts_symbol(ffset_FirstSet *fsts, ffset_FirstSetCalcFrame *frame, syms_SymbolID symbol)
 {
     int already_exists = 0;
 

@@ -150,6 +150,11 @@ size_t good_get_prules_len(const good_ProductionRules *prules)
 	return prules->fill_index;
 }
 
+const good_ProductionRule *good_get_prule(const good_ProductionRules *prules, unsigned int id)
+{
+	return (good_ProductionRule *) arr_get(prules->prs, id);
+}
+
 good_ProductionRuleFilter *good_set_prule_filter_by_id(good_ProductionRuleFilter *filter, unsigned int id)
 {
 	arr_Filter *f;

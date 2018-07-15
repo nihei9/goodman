@@ -2,16 +2,8 @@
 #define good_AST_CONVERTER_H
 
 #include "ast.h"
-#include "production_rules.h"
-#include "collections.h"
+#include "grammar.h"
 #include <stdlib.h>
-
-typedef struct good_Grammar {
-    const syms_SymbolStore *syms;
-    syms_SymbolID terminal_symbol_id_from;
-    syms_SymbolID terminal_symbol_id_to;
-    good_ProductionRules *prules;
-} good_Grammar;
 
 const good_Grammar *good_new_grammar(good_AST *root_ast, const syms_SymbolStore *syms);
 void good_delete_grammar(good_Grammar *grammar);

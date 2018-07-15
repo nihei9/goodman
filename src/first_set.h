@@ -13,7 +13,7 @@ typedef struct ffset_FirstSetItem {
     } input;
 
     struct {
-        good_SymbolID *set;
+        syms_SymbolID *set;
         size_t len;
         int has_empty;
     } output;
@@ -21,7 +21,7 @@ typedef struct ffset_FirstSetItem {
 
 ffset_FirstSet *ffset_new_fsts(void);
 void ffset_delete_fsts(ffset_FirstSet *fsts);
-int ffset_calc_fsts(ffset_FirstSet *fsts, const grm_Grammar *grm);
+int ffset_calc_fsts(ffset_FirstSet *fsts, const good_Grammar *grammar);
 int ffset_get_fsts(ffset_FirstSetItem *item);
 
 #endif

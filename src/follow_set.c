@@ -2,7 +2,7 @@
 #include "collections.h"
 
 typedef struct ffset_FollowSetTableElem {
-    good_SymbolID *head;
+    syms_SymbolID *head;
     size_t len;
     int has_eof;
 } ffset_FollowSetTableElem;
@@ -18,7 +18,7 @@ struct ffset_FollowSet {
 };
 
 typedef struct ffset_FollowSetCalcFrame {
-    good_SymbolID sym;
+    syms_SymbolID sym;
     size_t arr_bottom_index;
     size_t arr_fill_index;
     int has_eof;
@@ -26,8 +26,8 @@ typedef struct ffset_FollowSetCalcFrame {
 } ffset_FollowSetCalcFrame;
 
 
-static void ffset_set_flws_calc_frame(ffset_FollowSetCalcFrame *frame, good_SymbolID sym, size_t arr_bottom_index);
-static int ffset_calc_flws_at(ffset_FollowSet *flws, ffset_FollowSetCalcFrame *frame, const grm_Grammar *grm, const ffset_FirstSet *fsts);
+static void ffset_set_flws_calc_frame(ffset_FollowSetCalcFrame *frame, syms_SymbolID sym, size_t arr_bottom_index);
+static int ffset_calc_flws_at(ffset_FollowSet *flws, ffset_FollowSetCalcFrame *frame, const good_Grammar *grammar, const ffset_FirstSet *fsts);
 
 
 ffset_FollowSet *ffset_new_flws(void)
@@ -41,7 +41,7 @@ ffset_FollowSet *ffset_new_flws(void)
         goto FAILURE;
     }
 
-    arr = arr_new(sizeof (good_SymbolID));
+    arr = arr_new(sizeof (syms_SymbolID));
     if (arr == NULL) {
         goto FAILURE;
     }
@@ -80,33 +80,28 @@ void ffset_delete_flws(ffset_FollowSet *flws)
     return;
 }
 
-int ffset_calc_flws(ffset_FollowSet *flws, const grm_Grammar *grm, const ffset_FirstSet *fsts)
+int ffset_calc_flws(ffset_FollowSet *flws, const good_Grammar *grammar, const ffset_FirstSet *fsts)
 {
-    const grm_ProductionRule *prule;
-    grm_ProductionRuleFilter filter_body;
-    grm_ProductionRuleFilter *filter;
+    const good_ProductionRule *prule;
+    good_ProductionRuleFilter filter;
 
-    filter = grm_find_all_prule(grm, &filter_body);
-    if (filter == NULL) {
-        return 1;
-    }
-    prule = grm_next_prule(grm, filter);
+    good_set_prule_filter_match_all(&filter);
+    prule = good_next_prule(&filter, grammar->prules);
     if (prule == NULL) {
         return 1;
     }
 
     while (prule != NULL) {
-        good_SymbolID sym = grm_get_pr_lhs(prule);
         ffset_FollowSetCalcFrame frame;
         int ret;
 
-        ffset_set_flws_calc_frame(&frame, sym, 0);
-        ret = ffset_calc_flws_at(flws, &frame, grm, fsts);
+        ffset_set_flws_calc_frame(&frame, prule->lhs, 0);
+        ret = ffset_calc_flws_at(flws, &frame, grammar, fsts);
         if (ret != 0) {
             return 1;
         }
 
-        prule = grm_next_prule(grm, filter);
+        prule = good_next_prule(&filter, grammar->prules);
     }
 
     return 0;
@@ -130,17 +125,15 @@ int ffset_get_flws(ffset_FollowSetItem *item)
 }
 
 
-static void ffset_set_flws_calc_frame(ffset_FollowSetCalcFrame *frame, good_SymbolID sym, size_t arr_bottom_index)
+static void ffset_set_flws_calc_frame(ffset_FollowSetCalcFrame *frame, syms_SymbolID sym, size_t arr_bottom_index)
 {
     frame->sym = sym;
     frame->arr_bottom_index = arr_bottom_index;
 }
 
 
-static int ffset_calc_flws_at(ffset_FollowSet *flws, ffset_FollowSetCalcFrame *frame, const grm_Grammar *grm, const ffset_FirstSet *fsts)
+static int ffset_calc_flws_at(ffset_FollowSet *flws, ffset_FollowSetCalcFrame *frame, const good_Grammar *grammar, const ffset_FirstSet *fsts)
 {
-    const good_SymbolID ssym = grm_get_start_symbol(grm);
-
     frame->arr_fill_index = frame->arr_bottom_index;
     frame->has_eof = 0;
     frame->already_caluclated = 0;
@@ -151,42 +144,35 @@ static int ffset_calc_flws_at(ffset_FollowSet *flws, ffset_FollowSetCalcFrame *f
     }
 
     // 記号が開始記号ならEOFをFOLLOW集合に追加する。
-    if (frame->sym == ssym) {
+    if (frame->sym == grammar->start_symbol) {
         frame->has_eof = 1;
     }
 
     {
-        const grm_ProductionRule *prule;
-        grm_ProductionRuleFilter filter_body;
-        grm_ProductionRuleFilter *filter;
+        const good_ProductionRule *prule;
+        good_ProductionRuleFilter filter;
 
-        filter = grm_find_all_prule(grm, &filter_body);
-        if (filter == NULL) {
-            return 1;
-        }
-        prule = grm_next_prule(grm, filter);
+        good_set_prule_filter_match_all(&filter);
+        prule = good_next_prule(&filter, grammar->prules);
         if (prule == NULL) {
             return 1;
         }
-
         while (prule != NULL) {
-            const good_SymbolID *rhs = grm_get_pr_rhs(prule);
-            size_t rhs_len = grm_get_pr_rhs_len(prule);
             size_t i;
 
-            for (i = 0; i < rhs_len; i++) {
+            for (i = 0; i < prule->rhs_len; i++) {
                 ffset_FirstSetItem fsts_item;
                 int ret;
                 ffset_FollowSetCalcFrame f;
                 ffset_FollowSetTableElem *elem;
                 size_t j;
 
-                if (rhs[i] != frame->sym) {
+                if (prule->rhs[i] != frame->sym) {
                     continue;
                 }
 
                 fsts_item.input.fsts = (ffset_FirstSet *) fsts;
-                fsts_item.input.prule_id = grm_get_pr_id(prule);
+                fsts_item.input.prule_id = prule->id;
                 fsts_item.input.offset = i + 1;
                 ret = ffset_get_fsts(&fsts_item);
                 if (ret != 0) {
@@ -206,8 +192,8 @@ static int ffset_calc_flws_at(ffset_FollowSet *flws, ffset_FollowSetCalcFrame *f
                     continue;
                 }
 
-                ffset_set_flws_calc_frame(&f, grm_get_pr_lhs(prule), frame->arr_fill_index);
-                ret = ffset_calc_flws_at(flws, &f, grm, fsts);
+                ffset_set_flws_calc_frame(&f, prule->lhs, frame->arr_fill_index);
+                ret = ffset_calc_flws_at(flws, &f, grammar, fsts);
                 if (ret != 0) {
                     return 1;
                 }
@@ -226,13 +212,13 @@ static int ffset_calc_flws_at(ffset_FollowSet *flws, ffset_FollowSetCalcFrame *f
                 }
             }
 
-            prule = grm_next_prule(grm, filter);
+            prule = good_next_prule(&filter, grammar->prules);
         }
     }
 
     {
         ffset_FollowSetTableElem *elem;
-        good_SymbolID *set;
+        syms_SymbolID *set;
         size_t i;
         void *ret;
 
@@ -241,12 +227,12 @@ static int ffset_calc_flws_at(ffset_FollowSet *flws, ffset_FollowSetCalcFrame *f
             return 0;
         }
 
-        set = (good_SymbolID *) calloc(frame->arr_fill_index - frame->arr_bottom_index, sizeof (good_SymbolID));
+        set = (syms_SymbolID *) calloc(frame->arr_fill_index - frame->arr_bottom_index, sizeof (syms_SymbolID));
         if (set == NULL) {
             return 1;
         }
         for (i = frame->arr_bottom_index; i < frame->arr_fill_index; i++) {
-            const good_SymbolID *sym;
+            const syms_SymbolID *sym;
 
             sym = arr_get(flws->work.arr, i);
             if (sym == NULL) {

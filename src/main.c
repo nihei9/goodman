@@ -1,4 +1,3 @@
-#include "grammar.h"
 #include "ast_converter.h"
 #include "parser.h"
 #include "tokenizer.h"
@@ -49,8 +48,9 @@ static int good_execute(const good_GoodmanParameters *params)
     const good_AST *ast = NULL;
     good_Parser *psr = NULL;
     good_Tokenizer *tknzr = NULL;
-    good_SymbolTable *symtbl = NULL;
+    syms_SymbolStore *syms = NULL;
     FILE *target = NULL;
+    int exit_code = 1;
     
     target = fopen(params->filename, "r");
     if (target == NULL) {
@@ -59,14 +59,14 @@ static int good_execute(const good_GoodmanParameters *params)
         goto END;
     }
 
-    symtbl = good_new_symtbl();
-    if (symtbl == NULL) {
-        printf("Failed to create symbol table.\n");
+    syms = syms_new();
+    if (syms == NULL) {
+        printf("Failed to create symbol store.\n");
 
         goto END;
     }
 
-    tknzr = good_new_tokenizer(target, symtbl);
+    tknzr = good_new_tokenizer(target, syms);
     if (tknzr == NULL) {
         printf("Failed to create tokenizer.\n");
 
@@ -87,7 +87,7 @@ static int good_execute(const good_GoodmanParameters *params)
         goto END;
     }
 
-    grammar = good_new_grammar_from_ast(ast, symtbl);
+    grammar = good_new_grammar((good_AST *) ast, syms);
     if (grammar == NULL) {
         printf("Failed to create grammar.\n");
 
@@ -96,72 +96,66 @@ static int good_execute(const good_GoodmanParameters *params)
 
     good_print_grammar(grammar);
 
-    return 0;
+    exit_code = 0;
 
 END:
     good_delete_grammar((good_Grammar *) grammar);
     good_delete_ast((good_AST *) ast);
     good_delete_parser(psr);
     good_delete_tokenizer(tknzr);
-    good_delete_symtbl(symtbl);
+    syms_delete(syms);
     if (target != NULL) {
         fclose(target);
     }
     
-    return 1;
+    return exit_code;
 }
 
 static void good_print_grammar(const good_Grammar *grammar)
 {
     // 終端記号表示
     {
-        const grm_Grammar *prtbl;
-        const grm_ProductionRule *prule;
-        grm_ProductionRuleFilter filter;
-        grm_ProductionRuleFilter *f;
+        syms_SymbolID lhs_id;
 
         printf("@terminal-symbol\n");
 
-        prtbl = grammar->prtbl;
-        
-        f = grm_find_all_prule(prtbl, &filter);
-        while ((prule = grm_next_prule(prtbl, f)) != NULL) {
-            good_SymbolID lhs = grm_get_pr_lhs(prule);
-            const good_SymbolID *rhs = grm_get_pr_rhs(prule);
+        for (lhs_id = grammar->terminal_symbol_id_from; lhs_id <= grammar->terminal_symbol_id_to; lhs_id++) {
+            const char *lhs_str;
+            good_ProductionRuleFilter filter;
+            const good_ProductionRule *prule;
 
-            if (good_get_symbol_type(lhs) != good_SYMTYPE_TERMINAL) {
-                continue;
+            lhs_str = syms_lookup(grammar->syms, lhs_id);
+            if (lhs_str == NULL) {
+                return;
             }
 
-            printf("%s %s\n", grm_lookup_symbol(prtbl, lhs), grm_lookup_symbol(prtbl, rhs[0]));
+            good_set_prule_filter_by_lhs(&filter, lhs_id);
+            prule = good_next_prule(&filter, grammar->prules);
+            if (prule == NULL) {
+                return;
+            }
+            printf("%s %s\n", lhs_str, syms_lookup(grammar->syms, prule->rhs[0]));
         }
     }
 
     // 生成規則表示
     {
-        const grm_Grammar *prtbl;
-        const grm_ProductionRule *prule;
-        grm_ProductionRuleFilter filter;
-        grm_ProductionRuleFilter *f;
+        const good_ProductionRule *prule;
+        good_ProductionRuleFilter filter;
 
         printf("@production-rule\n");
 
-        prtbl = grammar->prtbl;
-        
-        f = grm_find_all_prule(prtbl, &filter);
-        while ((prule = grm_next_prule(prtbl, f)) != NULL) {
-            good_SymbolID lhs = grm_get_pr_lhs(prule);
-            const good_SymbolID *rhs = grm_get_pr_rhs(prule);
-            size_t rhs_len = grm_get_pr_rhs_len(prule);
+        good_set_prule_filter_match_all(&filter);
+        while ((prule = good_next_prule(&filter, grammar->prules)) != NULL) {
             size_t i;
 
-            if (good_get_symbol_type(lhs) != good_SYMTYPE_NON_TERMINAL) {
+            if (prule->lhs >= grammar->terminal_symbol_id_from && prule->lhs <= grammar->terminal_symbol_id_to) {
                 continue;
             }
 
-            printf("%s", grm_lookup_symbol(prtbl, lhs));
-            for (i = 0; i < rhs_len; i++) {
-                printf(" %s", grm_lookup_symbol(prtbl, rhs[i]));
+            printf("%s", syms_lookup(grammar->syms, prule->lhs));
+            for (i = 0; i < prule->rhs_len; i++) {
+                printf(" %s", syms_lookup(grammar->syms, prule->rhs[i]));
             }
             printf("\n");
         }

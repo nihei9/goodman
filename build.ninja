@@ -26,10 +26,7 @@ rule copy
 
 # build
 
-build $builddir/terminal_symbol_table.o: cxx $root/src/terminal_symbol_table.c
-build $builddir/grammar.o: cxx $root/src/grammar.c
-build $builddir/production_rule_table.o: cxx $root/src/production_rule_table.c
-build $builddir/symbol_table.o: cxx $root/src/symbol_table.c
+build $builddir/production_rules.o: cxx $root/src/production_rules.c
 build $builddir/first_set.o: cxx $root/src/first_set.c
 build $builddir/follow_set.o: cxx $root/src/follow_set.c
 build $builddir/tokenizer.o: cxx $root/src/tokenizer.c
@@ -37,7 +34,7 @@ build $builddir/ast.o: cxx $root/src/ast.c
 build $builddir/parser.o: cxx $root/src/parser.c
 build $builddir/ast_normalizer.o: cxx $root/src/ast_normalizer.c
 build $builddir/ast_converter.o: cxx $root/src/ast_converter.c
-build $builddir/lib/libgoodman.a: ar $builddir/terminal_symbol_table.o $builddir/grammar.o $builddir/symbol_table.o $builddir/production_rule_table.o $builddir/first_set.o $builddir/follow_set.o $builddir/tokenizer.o $builddir/ast.o $builddir/parser.o $builddir/ast_normalizer.o $builddir/ast_converter.o
+build $builddir/lib/libgoodman.a: ar $builddir/production_rules.o $builddir/first_set.o $builddir/follow_set.o $builddir/tokenizer.o $builddir/ast.o $builddir/parser.o $builddir/ast_normalizer.o $builddir/ast_converter.o
 
 build $builddir/main.o: cxx $root/src/main.c
 build $builddir/bin/goodman: link $builddir/main.o | $builddir/lib/libgoodman.a
@@ -46,18 +43,6 @@ build $builddir/bin/goodman: link $builddir/main.o | $builddir/lib/libgoodman.a
 build goodman: phony $builddir/lib/libgoodman.a $builddir/bin/goodman
 
 # test
-
-build $builddir/grammar_test.o: cxx $root/test/grammar_test.c
-build $builddir/test/grammar_test: link $builddir/grammar_test.o | $builddir/lib/libgoodman.a
-  libs = -lgoodman -lcollections -lconnie
-
-build $builddir/symbol_table_test.o: cxx $root/test/symbol_table_test.c
-build $builddir/test/symbol_table_test: link $builddir/symbol_table_test.o | $builddir/lib/libgoodman.a
-  libs = -lgoodman -lcollections -lconnie
-
-build $builddir/production_rule_table_test.o: cxx $root/test/production_rule_table_test.c
-build $builddir/test/production_rule_table_test: link $builddir/production_rule_table_test.o | $builddir/lib/libgoodman.a
-  libs = -lgoodman -lcollections -lconnie
 
 build $builddir/first_set_test.o: cxx $root/test/first_set_test.c
 build $builddir/test/first_set_test: link $builddir/first_set_test.o | $builddir/lib/libgoodman.a
@@ -79,5 +64,4 @@ build $builddir/ast_converter_test.o: cxx $root/test/ast_converter_test.c
 build $builddir/test/ast_converter_test: link $builddir/ast_converter_test.o | $builddir/lib/libgoodman.a
   libs = -lgoodman -lcollections -lconnie
 
-build test: phony $builddir/test/grammar_test $builddir/test/symbol_table_test $builddir/test/production_rule_table_test $
-  $builddir/test/first_set_test $builddir/test/follow_set_test $builddir/test/tokenizer_test $builddir/test/parser_test $builddir/test/ast_converter_test
+build test: phony $builddir/test/first_set_test $builddir/test/follow_set_test $builddir/test/tokenizer_test $builddir/test/parser_test $builddir/test/ast_converter_test

@@ -2,12 +2,12 @@
 #include <string.h>
 #include <stdio.h>
 
-static good_AST *good_rewrite_rhs_elem_ast(good_AST *root_ast, good_SymbolID target_id, good_SymbolID replacement_id);
-static good_AST *good_new_prule_ast(good_SymbolID lhs_id, good_SymbolID rhs_elem_id);
+static good_AST *good_rewrite_rhs_elem_ast(good_AST *root_ast, syms_SymbolID target_id, syms_SymbolID replacement_id);
+static good_AST *good_new_prule_ast(syms_SymbolID lhs_id, syms_SymbolID rhs_elem_id);
 static int good_is_terminal_symbol_def(const good_AST *prule_ast);
 static const char *good_new_symbol_name(int num, char *buffer, size_t size);
 
-good_AST *good_normalize_ast(good_AST *root_ast, good_SymbolTable *symtbl)
+good_AST *good_normalize_ast(good_AST *root_ast, syms_SymbolStore *syms)
 {
     const good_AST *prule_ast;
     int num = 0;
@@ -32,7 +32,7 @@ good_AST *good_normalize_ast(good_AST *root_ast, good_SymbolTable *symtbl)
 
             for (rhs_elem_ast = good_get_child(rhs_ast, RHS_ELEM_OFFSET); rhs_elem_ast != NULL; rhs_elem_ast = rhs_elem_ast->brother) {
                 good_AST *new_prule_ast;
-                const good_SymbolID *new_lhs_id;
+                const syms_SymbolID *new_lhs_id;
                 const good_AST *ret_ast;
 
                 // 生成規則右辺に現れる文字列トークンは終端記号として定義する。
@@ -48,7 +48,7 @@ good_AST *good_normalize_ast(good_AST *root_ast, good_SymbolTable *symtbl)
                     return NULL;
                 }
                 // 終端記号として名前を登録
-                new_lhs_id = good_put_in_symtbl(symtbl, new_lhs_str, good_SYMTYPE_TERMINAL);
+                new_lhs_id = syms_put(syms, new_lhs_str);
                 if (new_lhs_id == NULL) {
                     return NULL;
                 }
@@ -85,7 +85,7 @@ good_AST *good_normalize_ast(good_AST *root_ast, good_SymbolTable *symtbl)
 // * ast.type を good_AST_PRULE_RHS_ELEM_SYMBOL にする
 // * token.type を good_TKN_NAME にする
 // * token.value.symbol_id を replacement_id にする
-static good_AST *good_rewrite_rhs_elem_ast(good_AST *root_ast, good_SymbolID target_id, good_SymbolID replacement_id)
+static good_AST *good_rewrite_rhs_elem_ast(good_AST *root_ast, syms_SymbolID target_id, syms_SymbolID replacement_id)
 {
     const good_AST *prule_ast;
 
@@ -120,7 +120,7 @@ static good_AST *good_rewrite_rhs_elem_ast(good_AST *root_ast, good_SymbolID tar
     return root_ast;
 }
 
-static good_AST *good_new_prule_ast(good_SymbolID lhs_id, good_SymbolID rhs_elem_id)
+static good_AST *good_new_prule_ast(syms_SymbolID lhs_id, syms_SymbolID rhs_elem_id)
 {
     good_AST *prule_ast = NULL;
     good_AST *lhs_ast = NULL;

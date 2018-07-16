@@ -32,10 +32,10 @@ struct good_Tokenizer {
 
     good_Token tkn;
 
-    good_SymbolTable *symtbl;
+    syms_SymbolStore *syms;
 };
 
-good_Tokenizer *good_new_tokenizer(FILE *target, good_SymbolTable *symtbl)
+good_Tokenizer *good_new_tokenizer(FILE *target, syms_SymbolStore *syms)
 {
     good_Tokenizer *tknzr = NULL;
     char *str = NULL;
@@ -60,7 +60,7 @@ good_Tokenizer *good_new_tokenizer(FILE *target, good_SymbolTable *symtbl)
     tknzr->c_buf.has_c = 0;
     tknzr->work.str = str;
     tknzr->work.str_len = TOKENIZER_STR_LEN;
-    tknzr->symtbl = symtbl;
+    tknzr->syms = syms;
 
     return tknzr;
 
@@ -80,7 +80,7 @@ void good_delete_tokenizer(good_Tokenizer *tknzr)
     tknzr->target = NULL;
     free(tknzr->work.str);
     tknzr->work.str = NULL;
-    tknzr->symtbl = NULL;
+    tknzr->syms = NULL;
     free(tknzr);
 }
 
@@ -117,7 +117,7 @@ static const good_Token *good_tokenize(good_Tokenizer *tknzr)
     tkn.pos = c.pos;
 
     if (good_is_name_letter(c.c)) {
-        const good_SymbolID *id;
+        const syms_SymbolID *id;
         size_t i = 0;
 
         do {
@@ -127,8 +127,7 @@ static const good_Token *good_tokenize(good_Tokenizer *tknzr)
         good_unget_char(tknzr, c);
         tknzr->work.str[i] = '\0';
 
-        // 第３引数はtokenizerにおいては使用しないので、何を設定しても無関係。
-        id = good_put_in_symtbl(tknzr->symtbl, tknzr->work.str, good_SYMTYPE_TERMINAL);
+        id = syms_put(tknzr->syms, tknzr->work.str);
         if (id == NULL) {
             return NULL;
         }
@@ -154,7 +153,7 @@ static const good_Token *good_tokenize(good_Tokenizer *tknzr)
         goto RETURN;
     }
     if (c.c == '\'') {
-        const good_SymbolID *id;
+        const syms_SymbolID *id;
         size_t i = 0;
 
         do {
@@ -165,14 +164,15 @@ static const good_Token *good_tokenize(good_Tokenizer *tknzr)
 
         if (c.c == EOF) {
             // TODO ERROR
+            return NULL;
         }
 
         if (strlen(tknzr->work.str) <= 0) {
             // TODO ERROR
+            return NULL;
         }
 
-        // 第３引数はtokenizerにおいては使用しないので、何を設定しても無関係。
-        id = good_put_in_symtbl(tknzr->symtbl, tknzr->work.str, good_SYMTYPE_TERMINAL);
+        id = syms_put(tknzr->syms, tknzr->work.str);
         if (id == NULL) {
             return NULL;
         }

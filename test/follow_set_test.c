@@ -2,8 +2,128 @@
 #include <connie_sugar.h>
 #include <stdio.h>
 
-void test_followset(connie_Connie *c);
-void print_result(const grm_Grammar *grm, const ffset_FollowSetItem *item);
+static void print_result(const syms_SymbolStore *syms, const ffset_FollowSetItem *item)
+{
+    size_t i;
+
+    printf("%s ... set: [ ", syms_lookup(syms, item->input.symbol));
+    for (i = 0; i < item->output.len; i++) {
+        printf("%s ", syms_lookup(syms, item->output.set[i]));
+    }
+    printf("], has_eof: %s\n", (item->output.has_eof)? "true" : "false");
+}
+
+static void test_followset(connie_Connie *c)
+{
+    syms_SymbolStore *syms;
+    good_ProductionRules *prules;
+    good_Grammar grammar;
+    ffset_FirstSet *fsts;
+    ffset_FollowSet *flws;
+    int ret;
+
+    {
+        syms_SymbolID rhs[256];
+        const syms_SymbolID *id;
+        syms_SymbolID terminal_symbol_id_from;
+        syms_SymbolID terminal_symbol_id_to;
+        syms_SymbolID id_id;
+        syms_SymbolID id_plus;
+        syms_SymbolID id_asterisk;
+        syms_SymbolID id_l_paren;
+        syms_SymbolID id_r_paren;
+        syms_SymbolID id_E;
+        syms_SymbolID id_T;
+        syms_SymbolID id_F;
+
+        syms = syms_new();
+        
+        id = syms_put(syms, "id");
+        id_id = *id;
+        terminal_symbol_id_from = *id;
+        id = syms_put(syms, "+");
+        id_plus = *id;
+        id = syms_put(syms, "*");
+        id_asterisk = *id;
+        id = syms_put(syms, "(");
+        id_l_paren = *id;
+        id = syms_put(syms, ")");
+        id_r_paren = *id;
+        terminal_symbol_id_to = *id;
+
+        id = syms_put(syms, "E");
+        id_E = *id;
+        id = syms_put(syms, "T");
+        id_T = *id;
+        id = syms_put(syms, "F");
+        id_F = *id;
+
+        prules = good_new_prules();
+
+        rhs[0] = id_E;
+        rhs[1] = id_plus;
+        rhs[2] = id_T;
+        good_append_prule(prules, id_E, rhs, 3);
+        rhs[0] = id_T;
+        good_append_prule(prules, id_E, rhs, 1);
+        rhs[0] = id_T;
+        rhs[1] = id_asterisk;
+        rhs[2] = id_F;
+        good_append_prule(prules, id_T, rhs, 3);
+        rhs[0] = id_F;
+        good_append_prule(prules, id_T, rhs, 1);
+        rhs[0] = id_l_paren;
+        rhs[1] = id_E;
+        rhs[2] = id_r_paren;
+        good_append_prule(prules, id_F, rhs, 3);
+        rhs[0] = id_id;
+        good_append_prule(prules, id_F, rhs, 1);
+
+        grammar.syms = syms;
+        grammar.terminal_symbol_id_from = terminal_symbol_id_from;
+        grammar.terminal_symbol_id_to = terminal_symbol_id_to;
+        grammar.prules = prules;
+        grammar.start_symbol = id_E;
+    }
+
+    fsts = ffset_new_fsts();
+    ret = ffset_calc_fsts(fsts, &grammar);
+    
+    flws = ffset_new_flws();
+    A_NOT_NULL(c, flws);
+
+    ret = ffset_calc_flws(flws, &grammar, fsts);
+    A_EQL_INT(c, 0, ret);
+
+    {
+        ffset_FollowSetItem item;
+
+        item.input.flws = flws;
+        
+        item.input.symbol = *syms_put(syms, "E");
+        ret = ffset_get_flws(&item);
+        A_EQL_INT(c, 0, ret);
+
+        print_result(syms, &item);
+
+        item.input.symbol = *syms_put(syms, "T");
+        ret = ffset_get_flws(&item);
+        A_EQL_INT(c, 0, ret);
+
+        print_result(syms, &item);
+
+        item.input.symbol = *syms_put(syms, "F");
+        ret = ffset_get_flws(&item);
+        A_EQL_INT(c, 0, ret);
+
+        print_result(syms, &item);
+    }
+
+    ffset_delete_flws(flws);
+    ffset_delete_fsts(fsts);
+    good_delete_prules(prules);
+    syms_delete(syms);
+}
 
 int main(void)
 {
@@ -16,90 +136,4 @@ int main(void)
   connie_delete(c);
 
   return 0;
-}
-
-#define RHS_LEN(rhs) (sizeof (rhs) / sizeof (char *))
-
-void test_followset(connie_Connie *c)
-{
-    grm_Grammar *grm;
-    ffset_FollowSet *flws;
-    ffset_FirstSet *fsts;
-    int ret;
-
-    {
-        const char *rhs_E_1[] = {"E", "+", "T"};
-        const char *rhs_E_2[] = {"T"};
-        const char *rhs_T_1[] = {"T", "*", "F"};
-        const char *rhs_T_2[] = {"F"};
-        const char *rhs_F_1[] = {"(", "E", ")"};
-        const char *rhs_F_2[] = {"id"};
-        const good_SymbolID *start_symbol;
-
-        grm = grm_new();
-
-        grm_set_default_symbol_type(grm, good_SYMTYPE_TERMINAL);
-        grm_put_symbol(grm, "id");
-        grm_put_symbol(grm, "+");
-        grm_put_symbol(grm, "*");
-        grm_put_symbol(grm, "(");
-        grm_put_symbol(grm, ")");
-
-        grm_set_default_symbol_type(grm, good_SYMTYPE_NON_TERMINAL);
-        grm_append_prule(grm, "E", rhs_E_1, RHS_LEN(rhs_E_1));
-        grm_append_prule(grm, "E", rhs_E_2, RHS_LEN(rhs_E_2));
-        grm_append_prule(grm, "T", rhs_T_1, RHS_LEN(rhs_T_1));
-        grm_append_prule(grm, "T", rhs_T_2, RHS_LEN(rhs_T_2));
-        grm_append_prule(grm, "F", rhs_F_1, RHS_LEN(rhs_F_1));
-        grm_append_prule(grm, "F", rhs_F_2, RHS_LEN(rhs_F_2));
-
-        start_symbol = grm_put_symbol(grm, "E");
-        grm_set_start_symbol(grm, *start_symbol);
-    }
-
-    fsts = ffset_new_fsts();
-    ret = ffset_calc_fsts(fsts, grm);
-    
-    flws = ffset_new_flws();
-    A_NOT_NULL(c, flws);
-
-    ret = ffset_calc_flws(flws, grm, fsts);
-    A_EQL_INT(c, 0, ret);
-
-    {
-        ffset_FollowSetItem item;
-
-        item.input.flws = flws;
-        
-        item.input.symbol = *grm_put_symbol(grm, "E");
-        ret = ffset_get_flws(&item);
-        A_EQL_INT(c, 0, ret);
-
-        print_result(grm, &item);
-
-        item.input.symbol = *grm_put_symbol(grm, "T");
-        ret = ffset_get_flws(&item);
-        A_EQL_INT(c, 0, ret);
-
-        print_result(grm, &item);
-
-        item.input.symbol = *grm_put_symbol(grm, "F");
-        ret = ffset_get_flws(&item);
-        A_EQL_INT(c, 0, ret);
-
-        print_result(grm, &item);
-    }
-
-    ffset_delete_flws(flws);
-}
-
-void print_result(const grm_Grammar *grm, const ffset_FollowSetItem *item)
-{
-    size_t i;
-
-    printf("%s ... set: [ ", grm_lookup_symbol(grm, item->input.symbol));
-    for (i = 0; i < item->output.len; i++) {
-        printf("%s ", grm_lookup_symbol(grm, item->output.set[i]));
-    }
-    printf("], has_eof: %s\n", (item->output.has_eof)? "true" : "false");
 }

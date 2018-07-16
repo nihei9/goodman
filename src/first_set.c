@@ -286,13 +286,17 @@ static int ffset_calc_fsts_at(ffset_FirstSet *fsts, ffset_FirstSetCalcFrame *fra
         return 1;
     }
 
+    if (prule->lhs >= grammar->terminal_symbol_id_from && prule->lhs <= grammar->terminal_symbol_id_to) {
+        goto RETURN;
+    }
+
     /*
      * 計算対象の記号列が空規則の場合
      */
     if (prule->rhs_len <= 0 || prule->rhs_len <= frame->offset) {
         frame->has_empty = 1;
 
-        return 0;
+        goto RETURN;
     }
 
     rhs = &prule->rhs[frame->offset];

@@ -50,6 +50,7 @@ static int good_execute(const good_GoodmanParameters *params)
     good_Tokenizer *tknzr = NULL;
     syms_SymbolStore *syms = NULL;
     FILE *target = NULL;
+    int exit_code = 1;
     
     target = fopen(params->filename, "r");
     if (target == NULL) {
@@ -95,7 +96,7 @@ static int good_execute(const good_GoodmanParameters *params)
 
     good_print_grammar(grammar);
 
-    return 0;
+    exit_code = 0;
 
 END:
     good_delete_grammar((good_Grammar *) grammar);
@@ -107,7 +108,7 @@ END:
         fclose(target);
     }
     
-    return 1;
+    return exit_code;
 }
 
 static void good_print_grammar(const good_Grammar *grammar)

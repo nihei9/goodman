@@ -8,7 +8,7 @@ typedef struct ffset_FollowSet ffset_FollowSet;
 
 typedef struct ffset_FollowSetItem {
     struct {
-        ffset_FollowSet *flws;
+        const ffset_FollowSet *flws;
         syms_SymbolID symbol;
     } input;
 

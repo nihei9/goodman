@@ -136,13 +136,17 @@ int ffset_get_fsts(ffset_FirstSetItem *item)
     size_t tmp_len = 0;
     int tmp_has_empty = 0;
 
+    if (item->input.prule_id >= item->input.fsts->set.table_len) {
+        return 1;
+    }
     table_elem = &item->input.fsts->set.table[item->input.prule_id];
-    branch_elem = (table_elem->head != NULL)? &table_elem->head[item->input.offset] : NULL;
 
-    if (table_elem->len <= 0) {
+    if (table_elem->head == NULL || item->input.offset >= table_elem->len) {
         tmp_has_empty = 1;
     }
     else {
+        branch_elem = &table_elem->head[item->input.offset];
+
         tmp_set = branch_elem->set;
         tmp_len = branch_elem->len;
     }
@@ -286,13 +290,17 @@ static int ffset_calc_fsts_at(ffset_FirstSet *fsts, ffset_FirstSetCalcFrame *fra
         return 1;
     }
 
+    if (prule->lhs >= grammar->terminal_symbol_id_from && prule->lhs <= grammar->terminal_symbol_id_to) {
+        goto RETURN;
+    }
+
     /*
      * 計算対象の記号列が空規則の場合
      */
     if (prule->rhs_len <= 0 || prule->rhs_len <= frame->offset) {
         frame->has_empty = 1;
 
-        return 0;
+        goto RETURN;
     }
 
     rhs = &prule->rhs[frame->offset];

@@ -7,7 +7,7 @@ typedef struct ffset_FirstSet ffset_FirstSet;
 
 typedef struct ffset_FirstSetItem {
     struct {
-        ffset_FirstSet *fsts;
+        const ffset_FirstSet *fsts;
         unsigned int prule_id;
         size_t offset;
     } input;

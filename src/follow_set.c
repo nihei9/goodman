@@ -90,10 +90,14 @@ int ffset_calc_flws(ffset_FollowSet *flws, const good_Grammar *grammar, const ff
     if (prule == NULL) {
         return 1;
     }
-
     while (prule != NULL) {
         ffset_FollowSetCalcFrame frame;
         int ret;
+
+        if (prule->lhs >= grammar->terminal_symbol_id_from && prule->lhs <= grammar->terminal_symbol_id_to) {
+            prule = good_next_prule(&filter, grammar->prules);
+            continue;
+        }
 
         ffset_set_flws_calc_frame(&frame, prule->lhs, 0);
         ret = ffset_calc_flws_at(flws, &frame, grammar, fsts);
@@ -160,17 +164,24 @@ static int ffset_calc_flws_at(ffset_FollowSet *flws, ffset_FollowSetCalcFrame *f
         while (prule != NULL) {
             size_t i;
 
+            if (prule->lhs >= grammar->terminal_symbol_id_from && prule->lhs <= grammar->terminal_symbol_id_to) {
+                prule = good_next_prule(&filter, grammar->prules);
+                continue;
+            }
+
             for (i = 0; i < prule->rhs_len; i++) {
                 ffset_FirstSetItem fsts_item;
+                ffset_FollowSetItem flws_item;
                 int ret;
                 ffset_FollowSetCalcFrame f;
-                ffset_FollowSetTableElem *elem;
                 size_t j;
 
+                // 生成規則の右辺に計算対象の記号が現れた場合のみFOLLOW集合を計算する。
                 if (prule->rhs[i] != frame->sym) {
                     continue;
                 }
 
+                // 計算対象の記号に後続する記号列のFIRST集合をFOLLOW集合に追加する。
                 fsts_item.input.fsts = (ffset_FirstSet *) fsts;
                 fsts_item.input.prule_id = prule->id;
                 fsts_item.input.offset = i + 1;
@@ -178,13 +189,29 @@ static int ffset_calc_flws_at(ffset_FollowSet *flws, ffset_FollowSetCalcFrame *f
                 if (ret != 0) {
                     return 1;
                 }
-
-                for (i = 0; i < fsts_item.output.len; i++) {
+                for (j = 0; j < fsts_item.output.len; j++) {
                     void *ret;
+                    int already_exist = 0;
+                    size_t k;
 
-                    ret = arr_set(flws->work.arr, frame->arr_fill_index++, &fsts_item.output.set[i]);
-                    if (ret == NULL) {
-                        return 1;
+                    // 記号がすでにFOLLOW集合に含まれる場合は再度登録はしない。
+                    for (k = 0; k < frame->arr_fill_index; k++) {
+                        const syms_SymbolID *id;
+                        
+                        id = (syms_SymbolID *) arr_get(flws->work.arr, k);
+                        if (id == NULL) {
+                            return 1;
+                        }
+                        if (fsts_item.output.set[j] == *id) {
+                            already_exist = 1;
+                            break;
+                        }
+                    }
+                    if (!already_exist) {
+                        ret = arr_set(flws->work.arr, frame->arr_fill_index++, &fsts_item.output.set[j]);
+                        if (ret == NULL) {
+                            return 1;
+                        }
                     }
                 }
 
@@ -192,22 +219,45 @@ static int ffset_calc_flws_at(ffset_FollowSet *flws, ffset_FollowSetCalcFrame *f
                     continue;
                 }
 
+                // 上記で求めたFIRST集合に空集合が含まれる場合は、FIRST集合計算時に対象となった生成規則の左辺値のFOLLOW集合を求めてそれを追加する。
+
                 ffset_set_flws_calc_frame(&f, prule->lhs, frame->arr_fill_index);
                 ret = ffset_calc_flws_at(flws, &f, grammar, fsts);
                 if (ret != 0) {
                     return 1;
                 }
-
-                elem = (ffset_FollowSetTableElem *) hmap_lookup(flws->set.map, &frame->sym);
-                if (elem == NULL) {
+                flws_item.input.flws = flws;
+                flws_item.input.symbol = f.sym;
+                ret = ffset_get_flws(&flws_item);
+                if (ret != 0) {
                     return 1;
                 }
-                for (j = 0; j < elem->len; i++) {
+                if (flws_item.output.has_eof) {
+                    frame->has_eof = 1;
+                }
+                for (j = 0; j < flws_item.output.len; j++) {
                     void *ret;
+                    int already_exist = 0;
+                    size_t k;
 
-                    ret = arr_set(flws->work.arr, frame->arr_fill_index++, &elem->head[i]);
-                    if (ret == NULL) {
-                        return 1;
+                    // 記号がすでにFOLLOW集合に含まれる場合は再度登録はしない。
+                    for (k = 0; k < frame->arr_fill_index; k++) {
+                        const syms_SymbolID *id;
+                        
+                        id = (syms_SymbolID *) arr_get(flws->work.arr, k);
+                        if (id == NULL) {
+                            return 1;
+                        }
+                        if (flws_item.output.set[j] == *id) {
+                            already_exist = 1;
+                            break;
+                        }
+                    }
+                    if (!already_exist) {
+                        ret = arr_set(flws->work.arr, frame->arr_fill_index++, &flws_item.output.set[j]);
+                        if (ret == NULL) {
+                            return 1;
+                        }
                     }
                 }
             }
@@ -221,11 +271,6 @@ static int ffset_calc_flws_at(ffset_FollowSet *flws, ffset_FollowSetCalcFrame *f
         syms_SymbolID *set;
         size_t i;
         void *ret;
-
-        elem = (ffset_FollowSetTableElem *) hmap_lookup(flws->set.map, &frame->sym);
-        if (elem != NULL) {
-            return 0;
-        }
 
         set = (syms_SymbolID *) calloc(frame->arr_fill_index - frame->arr_bottom_index, sizeof (syms_SymbolID));
         if (set == NULL) {

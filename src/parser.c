@@ -40,7 +40,7 @@ const good_AST *good_parse(good_Parser *psr)
 
     do {
         tkn = good_consume_token(psr->tknzr);
-        if (tkn->type == good_TKN_NEW_LINE) {
+        while (tkn->type == good_TKN_NEW_LINE) {
             tkn = good_consume_token(psr->tknzr);
         }
         if (tkn->type == good_TKN_EOF) {

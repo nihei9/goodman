@@ -64,7 +64,7 @@ const good_AST *good_parse(good_Parser *psr)
             good_append_child(prule_ast, prule_lhs_ast);
 
             tkn = good_consume_token(psr->tknzr);
-            if (tkn->type == good_TKN_NEW_LINE) {
+            while (tkn->type == good_TKN_NEW_LINE) {
                 tkn = good_consume_token(psr->tknzr);
             }
             if (tkn->type != good_TKN_PRULE_LEADER) {
@@ -108,7 +108,7 @@ const good_AST *good_parse(good_Parser *psr)
                     return NULL;
                 }
 
-                if (tkn->type == good_TKN_NEW_LINE) {
+                while (tkn->type == good_TKN_NEW_LINE) {
                     tkn = good_consume_token(psr->tknzr);
                 }
             } while (tkn->type == good_TKN_PRULE_OR);

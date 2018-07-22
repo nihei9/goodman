@@ -3,12 +3,14 @@
 #include <stdio.h>
 
 void test_1(connie_Connie *c);
+void test_2(connie_Connie *c);
 
 int main (void)
 {
     connie_Connie *c = connie_new(__FILE__);
 
     TEST(c, test_1);
+    TEST(c, test_2);
 
     connie_print(c);
     connie_delete(c);
@@ -17,6 +19,122 @@ int main (void)
 }
 
 void test_1(connie_Connie *c)
+{
+    good_Tokenizer *tknzr;
+    syms_SymbolStore *syms;
+    const good_Token *tkn;
+    FILE *target;
+
+    target = fopen("test/data/tokenizer_test/tokens.txt", "r");
+    A_NOT_NULL(c, target);
+
+    syms = syms_new();
+    A_NOT_NULL(c, syms);
+
+    tknzr = good_new_tokenizer(target, syms);
+    A_NOT_NULL(c, tknzr);
+
+    tkn = good_consume_token(tknzr);
+    A_NOT_NULL(c, tkn);
+    if (tkn != NULL) {
+        A_EQL_INT(c, good_TKN_NEW_LINE, tkn->type);
+    }
+
+    tkn = good_consume_token(tknzr);
+    A_NOT_NULL(c, tkn);
+    if (tkn != NULL) {
+        A_EQL_INT(c, good_TKN_PRULE_LEADER, tkn->type);
+    }
+
+    tkn = good_consume_token(tknzr);
+    A_NOT_NULL(c, tkn);
+    if (tkn != NULL) {
+        A_EQL_INT(c, good_TKN_PRULE_OR, tkn->type);
+    }
+
+    tkn = good_consume_token(tknzr);
+    A_NOT_NULL(c, tkn);
+    if (tkn != NULL) {
+        A_EQL_INT(c, good_TKN_PRULE_OR, tkn->type);
+    }
+
+    tkn = good_consume_token(tknzr);
+    A_NOT_NULL(c, tkn);
+    if (tkn != NULL) {
+        A_EQL_INT(c, good_TKN_PRULE_TERMINATOR, tkn->type);
+    }
+
+    tkn = good_consume_token(tknzr);
+    A_NOT_NULL(c, tkn);
+    if (tkn != NULL) {
+        A_EQL_INT(c, good_TKN_NEW_LINE, tkn->type);
+    }
+
+    tkn = good_consume_token(tknzr);
+    A_NOT_NULL(c, tkn);
+    if (tkn != NULL) {
+        A_EQL_INT(c, good_TKN_NAME, tkn->type);
+        A_EQL_STRING(c, "xxxx", syms_lookup(syms, tkn->value.symbol_id));
+    }
+
+    tkn = good_consume_token(tknzr);
+    A_NOT_NULL(c, tkn);
+    if (tkn != NULL) {
+        A_EQL_INT(c, good_TKN_NAME, tkn->type);
+        A_EQL_STRING(c, "xxxx_yyyy", syms_lookup(syms, tkn->value.symbol_id));
+    }
+
+    tkn = good_consume_token(tknzr);
+    A_NOT_NULL(c, tkn);
+    if (tkn != NULL) {
+        A_EQL_INT(c, good_TKN_NAME, tkn->type);
+        A_EQL_STRING(c, "__XXXX__", syms_lookup(syms, tkn->value.symbol_id));
+    }
+
+    tkn = good_consume_token(tknzr);
+    A_NOT_NULL(c, tkn);
+    if (tkn != NULL) {
+        A_EQL_INT(c, good_TKN_NAME, tkn->type);
+        A_EQL_STRING(c, "Xxxx", syms_lookup(syms, tkn->value.symbol_id));
+    }
+
+    tkn = good_consume_token(tknzr);
+    A_NOT_NULL(c, tkn);
+    if (tkn != NULL) {
+        A_EQL_INT(c, good_TKN_NEW_LINE, tkn->type);
+    }
+
+    tkn = good_consume_token(tknzr);
+    A_NOT_NULL(c, tkn);
+    if (tkn != NULL) {
+        A_EQL_INT(c, good_TKN_STRING, tkn->type);
+        A_EQL_STRING(c, "xxxx", syms_lookup(syms, tkn->value.symbol_id));
+    }
+
+    tkn = good_consume_token(tknzr);
+    A_NOT_NULL(c, tkn);
+    if (tkn != NULL) {
+        A_EQL_INT(c, good_TKN_STRING, tkn->type);
+        A_EQL_STRING(c, "xxxx :|;", syms_lookup(syms, tkn->value.symbol_id));
+    }
+
+    tkn = good_consume_token(tknzr);
+    A_NOT_NULL(c, tkn);
+    if (tkn != NULL) {
+        A_EQL_INT(c, good_TKN_NEW_LINE, tkn->type);
+    }
+
+    tkn = good_consume_token(tknzr);
+    A_NOT_NULL(c, tkn);
+    if (tkn != NULL) {
+        A_EQL_INT(c, good_TKN_EOF, tkn->type);
+    }
+
+    good_delete_tokenizer(tknzr);
+    syms_delete(syms);
+}
+
+void test_2(connie_Connie *c)
 {
     good_Tokenizer *tknzr;
     syms_SymbolStore *syms;

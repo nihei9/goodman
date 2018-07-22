@@ -169,7 +169,11 @@ static void good_print_grammar(const good_Grammar *grammar)
             if (prule == NULL) {
                 return;
             }
-            printf("%s %s\n", lhs_str, syms_lookup(grammar->syms, prule->rhs[0]));
+            while (prule != NULL) {
+                printf("%s %s\n", lhs_str, syms_lookup(grammar->syms, prule->rhs[0]));
+                
+                prule = good_next_prule(&filter, grammar->prules);
+            }
         }
     }
 

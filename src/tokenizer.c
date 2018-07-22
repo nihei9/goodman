@@ -104,14 +104,9 @@ static const good_Token *good_tokenize(good_Tokenizer *tknzr)
         c = good_get_char(tknzr);
     }
     if (c.c == '#') {
-        good_Char last_c;
-
         do {
-            last_c = c;
             c = good_get_char(tknzr);
         } while (c.c != '\n' && c.c != EOF);
-        good_unget_char(tknzr, c);
-        c = last_c;
     }
 
     tkn.pos = c.pos;

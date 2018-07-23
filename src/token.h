@@ -6,11 +6,14 @@
 
 typedef enum good_TokenType {
     good_TKN_NAME,
-    good_TKN_PRULE_LEADER,
-    good_TKN_PRULE_OR,
-    good_TKN_PRULE_TERMINATOR,
-    good_TKN_STRING,
-    good_TKN_NEW_LINE,
+    good_TKN_PRULE_LEADER,      // :
+    good_TKN_PRULE_OR,          // |
+    good_TKN_PRULE_TERMINATOR,  // ;
+    good_TKN_STRING,            // '...'
+    good_TKN_OPTION,            // ?
+    good_TKN_PLUS,              // +
+    good_TKN_ASTERISK,          // *
+    good_TKN_NEW_LINE,          // \n
     good_TKN_EOF,
 } good_TokenType;
 

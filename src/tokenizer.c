@@ -177,6 +177,21 @@ static const good_Token *good_tokenize(good_Tokenizer *tknzr)
 
         goto RETURN;
     }
+    if (c.c == '?') {
+        tkn.type = good_TKN_OPTION;
+
+        goto RETURN;
+    }
+    if (c.c == '+') {
+        tkn.type = good_TKN_PLUS;
+
+        goto RETURN;
+    }
+    if (c.c == '*') {
+        tkn.type = good_TKN_ASTERISK;
+
+        goto RETURN;
+    }
     if (c.c == '\n') {
         tkn.type = good_TKN_NEW_LINE;
 

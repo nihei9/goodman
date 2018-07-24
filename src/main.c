@@ -90,6 +90,8 @@ static int good_execute(const good_GoodmanParameters *params)
     if (ast == NULL) {
         printf("Failed to parse.\n");
 
+        good_print_error(good_get_parser_error(psr));
+
         goto END;
     }
 

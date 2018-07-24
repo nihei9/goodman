@@ -3,6 +3,7 @@
 
 #include "ast.h"
 #include "tokenizer.h"
+#include "error.h"
 
 /*
  * AST構造
@@ -21,6 +22,7 @@ typedef struct good_Parser good_Parser;
 
 good_Parser *good_new_parser(good_Tokenizer *tknzr);
 void good_delete_parser(good_Parser *psr);
+const good_Error *good_get_parser_error(const good_Parser *psr);
 const good_AST *good_parse(good_Parser *psr);
 
 #endif

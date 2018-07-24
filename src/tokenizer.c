@@ -33,6 +33,8 @@ struct good_Tokenizer {
     good_Token tkn;
 
     syms_SymbolStore *syms;
+
+    good_Error error;
 };
 
 good_Tokenizer *good_new_tokenizer(FILE *target, syms_SymbolStore *syms)
@@ -82,6 +84,11 @@ void good_delete_tokenizer(good_Tokenizer *tknzr)
     tknzr->work.str = NULL;
     tknzr->syms = NULL;
     free(tknzr);
+}
+
+const good_Error *good_get_tokenizer_error(const good_Tokenizer *tknzr)
+{
+    return &tknzr->error;
 }
 
 const good_Token *good_consume_token(good_Tokenizer *tknzr)
@@ -158,12 +165,14 @@ static const good_Token *good_tokenize(good_Tokenizer *tknzr)
         tknzr->work.str[--i] = '\0';
 
         if (c.c == EOF) {
-            // TODO ERROR
+            tknzr->error.code = good_ERR_UNCLOSED_STRING;
+
             return NULL;
         }
 
         if (strlen(tknzr->work.str) <= 0) {
-            // TODO ERROR
+            tknzr->error.code = good_ERR_EMPTY_STRING;
+            
             return NULL;
         }
 

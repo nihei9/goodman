@@ -3,6 +3,8 @@
 
 struct good_Parser {
     good_Tokenizer *tknzr;
+
+    good_Error error;
 };
 
 good_Parser *good_new_parser(good_Tokenizer *tknzr)
@@ -28,9 +30,14 @@ void good_delete_parser(good_Parser *psr)
     free(psr);
 }
 
+const good_Error *good_get_parser_error(const good_Parser *psr)
+{
+    return &psr->error;
+}
+
 const good_AST *good_parse(good_Parser *psr)
 {
-    good_AST *root_ast;
+    good_AST *root_ast = NULL;
     const good_Token *tkn;
 
     root_ast = good_new_ast(good_AST_ROOT, NULL);
@@ -40,8 +47,16 @@ const good_AST *good_parse(good_Parser *psr)
 
     do {
         tkn = good_consume_token(psr->tknzr);
+        if (tkn == NULL) {
+            psr->error = *good_get_tokenizer_error(psr->tknzr);
+            goto ERROR;
+        }
         while (tkn->type == good_TKN_NEW_LINE) {
             tkn = good_consume_token(psr->tknzr);
+            if (tkn == NULL) {
+                psr->error = *good_get_tokenizer_error(psr->tknzr);
+                goto ERROR;
+            }
         }
         if (tkn->type == good_TKN_EOF) {
             break;
@@ -64,8 +79,16 @@ const good_AST *good_parse(good_Parser *psr)
             good_append_child(prule_ast, prule_lhs_ast);
 
             tkn = good_consume_token(psr->tknzr);
+            if (tkn == NULL) {
+                psr->error = *good_get_tokenizer_error(psr->tknzr);
+                goto ERROR;
+            }
             while (tkn->type == good_TKN_NEW_LINE) {
                 tkn = good_consume_token(psr->tknzr);
+                if (tkn == NULL) {
+                    psr->error = *good_get_tokenizer_error(psr->tknzr);
+                    goto ERROR;
+                }
             }
             if (tkn->type != good_TKN_PRULE_LEADER) {
                 // TODO SYNTAX ERROR
@@ -85,6 +108,10 @@ const good_AST *good_parse(good_Parser *psr)
                     good_AST *prule_rhs_elem_ast;
 
                     tkn = good_consume_token(psr->tknzr);
+                    if (tkn == NULL) {
+                        psr->error = *good_get_tokenizer_error(psr->tknzr);
+                        goto ERROR;
+                    }
                     if (tkn->type == good_TKN_NAME || tkn->type == good_TKN_STRING) {
                         good_ASTType type;
 
@@ -110,6 +137,10 @@ const good_AST *good_parse(good_Parser *psr)
 
                 while (tkn->type == good_TKN_NEW_LINE) {
                     tkn = good_consume_token(psr->tknzr);
+                    if (tkn == NULL) {
+                        psr->error = *good_get_tokenizer_error(psr->tknzr);
+                        goto ERROR;
+                    }
                 }
             } while (tkn->type == good_TKN_PRULE_OR);
 
@@ -125,4 +156,9 @@ const good_AST *good_parse(good_Parser *psr)
     } while (tkn->type != good_TKN_EOF);
 
     return root_ast;
+
+ERROR:
+    good_delete_ast(root_ast);
+
+    return NULL;
 }

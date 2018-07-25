@@ -42,7 +42,7 @@ const good_AST *good_parse(good_Parser *psr)
 
     root_ast = good_new_ast(good_AST_ROOT, NULL);
     if (root_ast == NULL) {
-        return NULL;
+        goto ERROR;
     }
 
     do {
@@ -68,13 +68,13 @@ const good_AST *good_parse(good_Parser *psr)
 
             prule_ast = good_new_ast(good_AST_PRULE, NULL);
             if (prule_ast == NULL) {
-                return NULL;
+                goto ERROR;
             }
             good_append_child(root_ast, prule_ast);
             
             prule_lhs_ast = good_new_ast(good_AST_PRULE_LHS, tkn);
             if (prule_lhs_ast == NULL) {
-                return NULL;
+                goto ERROR;
             }
             good_append_child(prule_ast, prule_lhs_ast);
 
@@ -91,8 +91,8 @@ const good_AST *good_parse(good_Parser *psr)
                 }
             }
             if (tkn->type != good_TKN_PRULE_LEADER) {
-                // TODO SYNTAX ERROR
-                return NULL;
+                psr->error.code = good_ERR_MISSING_PRULE_LEADER;
+                goto ERROR;
             }
 
             do {
@@ -100,7 +100,7 @@ const good_AST *good_parse(good_Parser *psr)
 
                 prule_rhs_ast = good_new_ast(good_AST_PRULE_RHS, NULL);
                 if (prule_rhs_ast == NULL) {
-                    return NULL;
+                    goto ERROR;
                 }
                 good_append_child(prule_ast, prule_rhs_ast);
 
@@ -124,15 +124,20 @@ const good_AST *good_parse(good_Parser *psr)
 
                         prule_rhs_elem_ast = good_new_ast(type, tkn);
                         if (prule_rhs_elem_ast == NULL) {
-                            return NULL;
+                            goto ERROR;
                         }
                         good_append_child(prule_rhs_ast, prule_rhs_elem_ast);
                     }
                 } while (tkn->type == good_TKN_NAME || tkn->type == good_TKN_STRING);
                 
                 if (tkn->type != good_TKN_PRULE_OR && tkn->type != good_TKN_NEW_LINE && tkn->type != good_TKN_PRULE_TERMINATOR) {
-                    // TODO SYNTAX ERROR
-                    return NULL;
+                    if (tkn->type == good_TKN_EOF) {
+                        psr->error.code = good_ERR_UNTERMINATED_PRULE;
+                    }
+                    else {
+                        psr->error.code = good_ERR_UNEXPECTED_TOKEN_IN_PRULE;
+                    }
+                    goto ERROR;
                 }
 
                 while (tkn->type == good_TKN_NEW_LINE) {
@@ -145,13 +150,13 @@ const good_AST *good_parse(good_Parser *psr)
             } while (tkn->type == good_TKN_PRULE_OR);
 
             if (tkn->type != good_TKN_PRULE_TERMINATOR) {
-                // TODO SYNTAX ERROR
-                return NULL;
+                psr->error.code = good_ERR_UNTERMINATED_PRULE;
+                goto ERROR;
             }
         }
         else {
             // TODO ERROR
-            return NULL;
+            goto ERROR;
         }
     } while (tkn->type != good_TKN_EOF);
 

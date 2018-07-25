@@ -172,7 +172,7 @@ static const good_Token *good_tokenize(good_Tokenizer *tknzr)
 
         if (strlen(tknzr->work.str) <= 0) {
             tknzr->error.code = good_ERR_EMPTY_STRING;
-            
+
             return NULL;
         }
 
@@ -212,7 +212,15 @@ static const good_Token *good_tokenize(good_Tokenizer *tknzr)
         goto RETURN;
     }
 
+    tknzr->error.code = good_ERR_UNKNOWN_TOKEN;
+
+    return NULL;
+
 RETURN:
+    if (tkn.type == good_TKN_OPTION || tkn.type == good_TKN_ASTERISK || tkn.type == good_TKN_PLUS) {
+        tknzr->error.code = good_ERR_UNIMPLEMENTED_FEATURE;
+        return NULL;
+    }
 
     tknzr->tkn = tkn;
 

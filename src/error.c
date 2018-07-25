@@ -12,7 +12,17 @@ static const good_ErrorMessageAndHint error_messages[good_ERR_CENTINEL] = {
         "Internal error occurred.",
         NULL,
     },
+    // UNIMPLEMENTED_FEATURE
+    {
+        "This feature is unimplemented.",
+        NULL,
+    },
 
+    // UNKNOWN_TOKEN
+    {
+        "Unknown token is detected.",
+        NULL,
+    },
     // UNCLOSED_STRING
     {
         "String is unclosed.",
@@ -23,13 +33,29 @@ static const good_ErrorMessageAndHint error_messages[good_ERR_CENTINEL] = {
         "String is empty.",
         "String expresses a terminal symbol, so empty string is not allowed.",
     },
+
+    // UNTERMINATED_PRULE
+    {
+        "Production rule is unterminated.",
+        "Production rule should be terminated by ; sign.",
+    },
+    // MISSING_PRULE_LEADER
+    {
+        "Missing : sign.",
+        NULL,
+    },
+    // UNEXPECTED_TOKEN_IN_PRULE
+    {
+        "Unexpected token was detected in a production rule.",
+        NULL,
+    },
 };
 
 void good_print_error(const good_Error *error)
 {
     good_ErrorMessageAndHint msg = error_messages[error->code];
 
-    printf("ERROR(%d): %s\n", error->code, msg.message);
+    printf("ERROR: %s\n", msg.message);
     if (msg.hint != NULL) {
         printf("HINT: %s\n", msg.hint);
     }

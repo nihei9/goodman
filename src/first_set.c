@@ -333,10 +333,19 @@ static int ffset_calc_fsts_at(ffset_FirstSet *fsts, ffset_FirstSetCalcFrame *fra
         }
         while (prule != NULL) {
             ffset_FirstSetCalcFrame f;
+            const good_ProductionRule *pr;
             int ret;
 
-            // ffset_calc_fsts_at()の無限再帰を避けるため、計算中の記号列と同じものは除外する。
+            // ffset_calc_fsts_at()の無限再帰を回避する。
             if (prule->id == frame->prule_id && frame->offset == 0) {
+                prule = good_next_prule(&filter, grammar->prules);
+                continue;
+            }
+            pr = good_get_prule(grammar->prules, frame->prule_id);
+            if (pr == NULL) {
+                return 1;
+            }
+            if (prule->rhs[0] == pr->rhs[frame->offset]) {
                 prule = good_next_prule(&filter, grammar->prules);
                 continue;
             }

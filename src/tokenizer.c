@@ -31,6 +31,8 @@ struct good_Tokenizer {
     } work;
 
     good_Token tkn;
+    good_Token consumed_tkn;
+    int is_tkn_set;
 
     syms_SymbolStore *syms;
 
@@ -62,6 +64,7 @@ good_Tokenizer *good_new_tokenizer(FILE *target, syms_SymbolStore *syms)
     tknzr->c_buf.has_c = 0;
     tknzr->work.str = str;
     tknzr->work.str_len = TOKENIZER_STR_LEN;
+    tknzr->is_tkn_set = 0;
     tknzr->syms = syms;
 
     return tknzr;
@@ -93,7 +96,40 @@ const good_Error *good_get_tokenizer_error(const good_Tokenizer *tknzr)
 
 const good_Token *good_consume_token(good_Tokenizer *tknzr)
 {
-    return good_tokenize(tknzr);
+    const good_Token *tkn;
+
+    if (!tknzr->is_tkn_set) {
+        tkn = good_tokenize(tknzr);
+        if (tkn == NULL) {
+            return NULL;
+        }
+        tknzr->is_tkn_set = 1;
+    }
+
+    tknzr->consumed_tkn = tknzr->tkn;
+
+    tkn = good_tokenize(tknzr);
+    if (tkn == NULL) {
+        return NULL;
+    }
+    tknzr->tkn = *tkn;
+
+    return &tknzr->consumed_tkn;
+}
+
+const good_Token *good_peek_token(good_Tokenizer *tknzr)
+{
+    if (!tknzr->is_tkn_set) {
+        const good_Token *tkn;
+
+        tkn = good_tokenize(tknzr);
+        if (tkn == NULL) {
+            return NULL;
+        }
+        tknzr->is_tkn_set = 1;
+    }
+
+    return &tknzr->tkn;
 }
 
 static const good_Token *good_tokenize(good_Tokenizer *tknzr)
@@ -217,11 +253,6 @@ static const good_Token *good_tokenize(good_Tokenizer *tknzr)
     return NULL;
 
 RETURN:
-    if (tkn.type == good_TKN_OPTION || tkn.type == good_TKN_ASTERISK || tkn.type == good_TKN_PLUS) {
-        tknzr->error.code = good_ERR_UNIMPLEMENTED_FEATURE;
-        return NULL;
-    }
-
     tknzr->tkn = tkn;
 
     return &tknzr->tkn;

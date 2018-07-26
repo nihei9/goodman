@@ -103,31 +103,62 @@ const good_AST *good_parse(good_Parser *psr)
                     goto ERROR;
                 }
                 good_append_child(prule_ast, prule_rhs_ast);
-
+                
                 do {
                     good_AST *prule_rhs_elem_ast;
+                    good_Token rhs_elem_tkn;
+                    good_ASTType type;
+                    good_QuantifierType q;
 
                     tkn = good_consume_token(psr->tknzr);
                     if (tkn == NULL) {
                         psr->error = *good_get_tokenizer_error(psr->tknzr);
                         goto ERROR;
                     }
-                    if (tkn->type == good_TKN_NAME || tkn->type == good_TKN_STRING) {
-                        good_ASTType type;
+                    
+                    if (tkn->type != good_TKN_NAME && tkn->type != good_TKN_STRING) {
+                        break;
+                    }
 
-                        if (tkn->type == good_TKN_NAME) {
-                            type = good_AST_PRULE_RHS_ELEM_SYMBOL;
+                    if (tkn->type == good_TKN_NAME) {
+                        type = good_AST_PRULE_RHS_ELEM_SYMBOL;
+                    }
+                    else {
+                        type = good_AST_PRULE_RHS_ELEM_STRING;
+                    }
+
+                    rhs_elem_tkn = *tkn;
+
+                    q = good_Q_1;
+                    tkn = good_peek_token(psr->tknzr);
+                    if (tkn->type == good_TKN_OPTION || tkn->type == good_TKN_ASTERISK || tkn->type == good_TKN_PLUS) {
+                        if (tkn->type == good_TKN_OPTION) {
+                            q = good_Q_0_OR_1;
                         }
-                        else {
-                            type = good_AST_PRULE_RHS_ELEM_STRING;
+                        else if (tkn->type == good_TKN_ASTERISK) {
+                            q = good_Q_0_OR_MORE;
+                        }
+                        else if (tkn->type == good_TKN_PLUS) {
+                            q = good_Q_1_OR_MORE;
                         }
 
-                        prule_rhs_elem_ast = good_new_ast(type, tkn);
-                        if (prule_rhs_elem_ast == NULL) {
+                        tkn = good_consume_token(psr->tknzr);
+                        if (tkn == NULL) {
+                            psr->error = *good_get_tokenizer_error(psr->tknzr);
                             goto ERROR;
                         }
-                        good_append_child(prule_rhs_ast, prule_rhs_elem_ast);
+                        tkn = good_consume_token(psr->tknzr);
+                        if (tkn == NULL) {
+                            psr->error = *good_get_tokenizer_error(psr->tknzr);
+                            goto ERROR;
+                        }
                     }
+
+                    prule_rhs_elem_ast = good_new_ast_with_q(type, &rhs_elem_tkn, q);
+                    if (prule_rhs_elem_ast == NULL) {
+                        goto ERROR;
+                    }
+                    good_append_child(prule_rhs_ast, prule_rhs_elem_ast);
                 } while (tkn->type == good_TKN_NAME || tkn->type == good_TKN_STRING);
                 
                 if (tkn->type != good_TKN_PRULE_OR && tkn->type != good_TKN_NEW_LINE && tkn->type != good_TKN_PRULE_TERMINATOR) {

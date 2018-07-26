@@ -12,9 +12,18 @@ typedef enum good_ASTType {
     good_AST_PRULE_RHS_ELEM_SYMBOL,
 } good_ASTType;
 
+typedef enum good_QuantifierType {
+    good_Q_1,
+    good_Q_0_OR_1,
+    good_Q_0_OR_MORE,
+    good_Q_1_OR_MORE,
+} good_QuantifierType;
+
 typedef struct good_AST {
     good_ASTType type;
     good_Token token;
+
+    good_QuantifierType quantifier;
 
     struct good_AST *parent;
     struct good_AST *brother;
@@ -24,6 +33,7 @@ typedef struct good_AST {
 } good_AST;
 
 good_AST *good_new_ast(good_ASTType type, const good_Token *token);
+good_AST *good_new_ast_with_q(good_ASTType type, const good_Token *token, good_QuantifierType quantifier);
 void good_delete_ast(good_AST *ast);
 good_AST *good_append_child(good_AST *parent, good_AST *child);
 good_AST *good_get_child(const good_AST *ast, size_t offset);

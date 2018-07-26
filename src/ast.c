@@ -3,6 +3,11 @@
 
 good_AST *good_new_ast(good_ASTType type, const good_Token *token)
 {
+    return good_new_ast_with_q(type, token, good_Q_1);
+}
+
+good_AST *good_new_ast_with_q(good_ASTType type, const good_Token *token, good_QuantifierType quantifier)
+{
     good_AST *ast;
 
     ast = (good_AST *) malloc(sizeof (good_AST));
@@ -14,6 +19,7 @@ good_AST *good_new_ast(good_ASTType type, const good_Token *token)
     if (token != NULL) {
         ast->token = *token;
     }
+    ast->quantifier = quantifier;
     ast->parent = NULL;
     ast->brother = NULL;
     ast->child = NULL;

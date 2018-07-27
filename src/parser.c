@@ -104,7 +104,7 @@ const good_AST *good_parse(good_Parser *psr)
                 }
                 good_append_child(prule_ast, prule_rhs_ast);
                 
-                do {
+                while (1) {
                     good_AST *prule_rhs_elem_ast;
                     good_Token rhs_elem_tkn;
                     good_ASTType type;
@@ -147,11 +147,6 @@ const good_AST *good_parse(good_Parser *psr)
                             psr->error = *good_get_tokenizer_error(psr->tknzr);
                             goto ERROR;
                         }
-                        tkn = good_consume_token(psr->tknzr);
-                        if (tkn == NULL) {
-                            psr->error = *good_get_tokenizer_error(psr->tknzr);
-                            goto ERROR;
-                        }
                     }
 
                     prule_rhs_elem_ast = good_new_ast_with_q(type, &rhs_elem_tkn, q);
@@ -159,7 +154,7 @@ const good_AST *good_parse(good_Parser *psr)
                         goto ERROR;
                     }
                     good_append_child(prule_rhs_ast, prule_rhs_elem_ast);
-                } while (tkn->type == good_TKN_NAME || tkn->type == good_TKN_STRING);
+                }
                 
                 if (tkn->type != good_TKN_PRULE_OR && tkn->type != good_TKN_NEW_LINE && tkn->type != good_TKN_PRULE_TERMINATOR) {
                     if (tkn->type == good_TKN_EOF) {

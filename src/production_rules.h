@@ -9,6 +9,9 @@ typedef struct good_ProductionRule {
 	syms_SymbolID lhs;
 	syms_SymbolID *rhs;
 	size_t rhs_len;
+
+	// c_Arrayの要素として値を持っているかを判定するフィールドで、
+	// 生成規則が空か否かを表すものではない。
 	int is_empty;
 } good_ProductionRule;
 

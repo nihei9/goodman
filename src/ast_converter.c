@@ -234,7 +234,8 @@ static int good_is_terminal_symbol_ast(const good_AST *prule_ast)
     while (rhs_ast != NULL) {
         const good_AST *elem;
 
-        if (good_count_child(rhs_ast) > 1) {
+        // good_count_child() == 0の場合は空規則のRHSと判断するため、good_count_child() > 1という条件式にはしない。
+        if (good_count_child(rhs_ast) != 1) {
             return 0;
         }
 

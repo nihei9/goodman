@@ -1,8 +1,13 @@
 #include "parser.h"
 #include <stdlib.h>
+#include <setjmp.h>
 
 struct good_Parser {
     good_Tokenizer *tknzr;
+
+    good_Error error;
+
+    jmp_buf jmp_env;
 };
 
 good_Parser *good_new_parser(good_Tokenizer *tknzr)
@@ -28,101 +33,178 @@ void good_delete_parser(good_Parser *psr)
     free(psr);
 }
 
-const good_AST *good_parse(good_Parser *psr)
+const good_Error *good_get_parser_error(const good_Parser *psr)
 {
-    good_AST *root_ast;
+    return &psr->error;
+}
+
+#define JMP_SYNTAX_ERROR 1
+#define JMP_INTERNAL_ERROR 2
+
+static const good_Token *good_psr_consume_token(good_Parser *psr)
+{
     const good_Token *tkn;
 
-    root_ast = good_new_ast(good_AST_ROOT, NULL);
-    if (root_ast == NULL) {
+    tkn = good_consume_token(psr->tknzr);
+    if (tkn == NULL) {
+        psr->error = *good_get_tokenizer_error(psr->tknzr);
+
+        longjmp(psr->jmp_env, JMP_INTERNAL_ERROR);
+    }
+
+    return tkn;
+}
+
+static const good_Token *good_psr_peek_token(good_Parser *psr)
+{
+    const good_Token *tkn;
+
+    tkn = good_peek_token(psr->tknzr);
+    if (tkn == NULL) {
+        psr->error = *good_get_tokenizer_error(psr->tknzr);
+
+        longjmp(psr->jmp_env, JMP_INTERNAL_ERROR);
+    }
+
+    return tkn;
+}
+
+static const good_Token *good_psr_match_1(good_Parser *psr, good_TokenType token_type, good_ErrorCode error_code)
+{
+    const good_Token *tkn;
+
+    tkn = good_psr_consume_token(psr);
+    if (tkn->type != token_type) {
+        psr->error.code = error_code;
+
+        longjmp(psr->jmp_env, JMP_SYNTAX_ERROR);
+    }
+
+    return tkn;
+}
+
+static void good_psr_skip_newline(good_Parser *psr)
+{
+    const good_Token *tkn;
+
+    tkn = good_psr_peek_token(psr);
+    while (tkn->type == good_TKN_NEW_LINE) {
+        good_psr_consume_token(psr);
+        tkn = good_psr_peek_token(psr);
+    }
+}
+
+static good_AST *good_psr_new_ast_node_with_q(good_Parser *psr, good_AST *parent, good_ASTType type, const good_Token *tkn, good_QuantifierType quantifier)
+{
+    good_AST *node;
+
+    node = good_new_ast_with_q(type, tkn, quantifier);
+    if (node == NULL) {
+        longjmp(psr->jmp_env, JMP_INTERNAL_ERROR);
+    }
+
+    if (parent != NULL) {
+        good_append_child(parent, node);
+    }
+
+    return node;
+}
+
+static good_AST *good_psr_new_ast_node(good_Parser *psr, good_AST *parent, good_ASTType type, const good_Token *tkn)
+{
+    return good_psr_new_ast_node_with_q(psr, parent, type, tkn, good_Q_1);
+}
+
+static good_AST *good_parse_prule_rhs_elem(good_Parser *psr, good_AST *parent)
+{
+    good_Token rhs_elem_tkn;
+    good_ASTType type;
+    good_QuantifierType q;
+    const good_Token *tkn;
+
+    tkn = good_psr_peek_token(psr);
+    if (tkn->type != good_TKN_NAME && tkn->type != good_TKN_STRING) {
         return NULL;
     }
 
-    do {
-        tkn = good_consume_token(psr->tknzr);
-        while (tkn->type == good_TKN_NEW_LINE) {
-            tkn = good_consume_token(psr->tknzr);
+    tkn = good_psr_consume_token(psr);
+    if (tkn->type == good_TKN_NAME) {
+        type = good_AST_PRULE_RHS_ELEM_SYMBOL;
+    }
+    else {
+        type = good_AST_PRULE_RHS_ELEM_STRING;
+    }
+    rhs_elem_tkn = *tkn;
+    
+    q = good_Q_1;
+    tkn = good_psr_peek_token(psr);
+    if (tkn->type == good_TKN_OPTION || tkn->type == good_TKN_ASTERISK || tkn->type == good_TKN_PLUS) {
+        tkn = good_psr_consume_token(psr);
+        if (tkn->type == good_TKN_OPTION) {
+            q = good_Q_0_OR_1;
         }
-        if (tkn->type == good_TKN_EOF) {
+        else if (tkn->type == good_TKN_ASTERISK) {
+            q = good_Q_0_OR_MORE;
+        }
+        else if (tkn->type == good_TKN_PLUS) {
+            q = good_Q_1_OR_MORE;
+        }
+    }
+
+    return good_psr_new_ast_node_with_q(psr, parent, type, &rhs_elem_tkn, q);
+}
+
+const good_AST *good_parse(good_Parser *psr)
+{
+    good_AST *root_ast = NULL;
+    const good_Token *tkn;
+
+    if (setjmp(psr->jmp_env) != 0) {
+        goto ERROR;
+    }
+
+    root_ast = good_psr_new_ast_node(psr, NULL, good_AST_ROOT, NULL);
+
+    while (1) {
+        good_AST *prule_ast;
+
+        good_psr_skip_newline(psr);
+
+        tkn = good_psr_consume_token(psr);
+        if (tkn->type != good_TKN_NAME) {
             break;
         }
 
-        if (tkn->type == good_TKN_NAME) {
-            good_AST *prule_ast;
-            good_AST *prule_lhs_ast;
+        prule_ast = good_psr_new_ast_node(psr, root_ast, good_AST_PRULE, NULL);
+        good_psr_new_ast_node(psr, prule_ast, good_AST_PRULE_LHS, tkn);
 
-            prule_ast = good_new_ast(good_AST_PRULE, NULL);
-            if (prule_ast == NULL) {
-                return NULL;
-            }
-            good_append_child(root_ast, prule_ast);
+        good_psr_skip_newline(psr);
+
+        good_psr_match_1(psr, good_TKN_PRULE_LEADER, good_ERR_MISSING_PRULE_LEADER);
+
+        while (1) {
+            good_AST *prule_rhs_ast;
+
+            prule_rhs_ast = good_psr_new_ast_node(psr, prule_ast, good_AST_PRULE_RHS, NULL);
             
-            prule_lhs_ast = good_new_ast(good_AST_PRULE_LHS, tkn);
-            if (prule_lhs_ast == NULL) {
-                return NULL;
+            while (good_parse_prule_rhs_elem(psr, prule_rhs_ast) != NULL);
+            
+            good_psr_skip_newline(psr);
+
+            tkn = good_psr_peek_token(psr);
+            if (tkn->type != good_TKN_PRULE_OR) {
+                break;
             }
-            good_append_child(prule_ast, prule_lhs_ast);
-
-            tkn = good_consume_token(psr->tknzr);
-            while (tkn->type == good_TKN_NEW_LINE) {
-                tkn = good_consume_token(psr->tknzr);
-            }
-            if (tkn->type != good_TKN_PRULE_LEADER) {
-                // TODO SYNTAX ERROR
-                return NULL;
-            }
-
-            do {
-                good_AST *prule_rhs_ast;
-
-                prule_rhs_ast = good_new_ast(good_AST_PRULE_RHS, NULL);
-                if (prule_rhs_ast == NULL) {
-                    return NULL;
-                }
-                good_append_child(prule_ast, prule_rhs_ast);
-
-                do {
-                    good_AST *prule_rhs_elem_ast;
-
-                    tkn = good_consume_token(psr->tknzr);
-                    if (tkn->type == good_TKN_NAME || tkn->type == good_TKN_STRING) {
-                        good_ASTType type;
-
-                        if (tkn->type == good_TKN_NAME) {
-                            type = good_AST_PRULE_RHS_ELEM_SYMBOL;
-                        }
-                        else {
-                            type = good_AST_PRULE_RHS_ELEM_STRING;
-                        }
-
-                        prule_rhs_elem_ast = good_new_ast(type, tkn);
-                        if (prule_rhs_elem_ast == NULL) {
-                            return NULL;
-                        }
-                        good_append_child(prule_rhs_ast, prule_rhs_elem_ast);
-                    }
-                } while (tkn->type == good_TKN_NAME || tkn->type == good_TKN_STRING);
-                
-                if (tkn->type != good_TKN_PRULE_OR && tkn->type != good_TKN_NEW_LINE && tkn->type != good_TKN_PRULE_TERMINATOR) {
-                    // TODO SYNTAX ERROR
-                    return NULL;
-                }
-
-                while (tkn->type == good_TKN_NEW_LINE) {
-                    tkn = good_consume_token(psr->tknzr);
-                }
-            } while (tkn->type == good_TKN_PRULE_OR);
-
-            if (tkn->type != good_TKN_PRULE_TERMINATOR) {
-                // TODO SYNTAX ERROR
-                return NULL;
-            }
+            good_psr_consume_token(psr);
         }
-        else {
-            // TODO ERROR
-            return NULL;
-        }
-    } while (tkn->type != good_TKN_EOF);
+
+        good_psr_match_1(psr, good_TKN_PRULE_TERMINATOR, good_ERR_UNTERMINATED_PRULE);
+    }
 
     return root_ast;
+
+ERROR:
+    good_delete_ast(root_ast);
+
+    return NULL;
 }

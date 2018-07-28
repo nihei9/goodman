@@ -67,6 +67,24 @@ void test_1(connie_Connie *c)
     tkn = good_consume_token(tknzr);
     A_NOT_NULL(c, tkn);
     if (tkn != NULL) {
+        A_EQL_INT(c, good_TKN_OPTION, tkn->type);
+    }
+
+    tkn = good_consume_token(tknzr);
+    A_NOT_NULL(c, tkn);
+    if (tkn != NULL) {
+        A_EQL_INT(c, good_TKN_PLUS, tkn->type);
+    }
+
+    tkn = good_consume_token(tknzr);
+    A_NOT_NULL(c, tkn);
+    if (tkn != NULL) {
+        A_EQL_INT(c, good_TKN_ASTERISK, tkn->type);
+    }
+
+    tkn = good_consume_token(tknzr);
+    A_NOT_NULL(c, tkn);
+    if (tkn != NULL) {
         A_EQL_INT(c, good_TKN_NEW_LINE, tkn->type);
     }
 
@@ -115,7 +133,7 @@ void test_1(connie_Connie *c)
     A_NOT_NULL(c, tkn);
     if (tkn != NULL) {
         A_EQL_INT(c, good_TKN_STRING, tkn->type);
-        A_EQL_STRING(c, "xxxx :|;", syms_lookup(syms, tkn->value.symbol_id));
+        A_EQL_STRING(c, "xxxx :|;?+*", syms_lookup(syms, tkn->value.symbol_id));
     }
 
     tkn = good_consume_token(tknzr);

@@ -74,28 +74,33 @@ static void good_print_ffset(const good_Grammar *grammar, const ffset_FirstSet *
                 continue;
             }
 
-            for (i = 0; i < prule->rhs_len; i++) {
-                int ret;
+            if (prule->rhs_len <= 0) {
+                printf("%u(%s)-0 t\n", prule->id, syms_lookup(grammar->syms, prule->lhs));
+            }
+            else {
+                for (i = 0; i < prule->rhs_len; i++) {
+                    int ret;
 
-                item.input.fsts = fsts;
-                item.input.prule_id = prule->id;
-                item.input.offset = i;
-                ret = ffset_get_fsts(&item);
-                if (ret != 0) {
-                    return;
-                }
+                    item.input.fsts = fsts;
+                    item.input.prule_id = prule->id;
+                    item.input.offset = i;
+                    ret = ffset_get_fsts(&item);
+                    if (ret != 0) {
+                        return;
+                    }
 
-                printf("%u(%s)-%lu", prule->id, syms_lookup(grammar->syms, prule->lhs), i);
-                if (item.output.has_empty) {
-                    printf(" t");
+                    printf("%u(%s)-%lu", prule->id, syms_lookup(grammar->syms, prule->lhs), i);
+                    if (item.output.has_empty) {
+                        printf(" t");
+                    }
+                    else {
+                        printf(" f");
+                    }
+                    for (j = 0; j < item.output.len; j++) {
+                        printf(" %lu(%s)", item.output.set[j], syms_lookup(grammar->syms, item.output.set[j]));
+                    }
+                    printf("\n");
                 }
-                else {
-                    printf(" f");
-                }
-                for (j = 0; j < item.output.len; j++) {
-                    printf(" %lu(%s)", item.output.set[j], syms_lookup(grammar->syms, item.output.set[j]));
-                }
-                printf("\n");
             }
         }
     }

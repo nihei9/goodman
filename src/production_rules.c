@@ -14,6 +14,7 @@ static int good_initialize_prule(unsigned int index, void *elem, void *user_data
 {
 	good_ProductionRule *prule = (good_ProductionRule *) elem;
 
+	prule->rhs = NULL;
 	prule->is_empty = 1;
 
 	return 0;
@@ -125,13 +126,15 @@ void good_delete_prules(good_ProductionRules *prules)
 int good_append_prule(good_ProductionRules *prules, syms_SymbolID lhs, const syms_SymbolID *rhs, size_t rhs_len)
 {
 	good_ProductionRule pr;
-	syms_SymbolID *rhs_dup;
+	syms_SymbolID *rhs_dup = NULL;
 	
-	rhs_dup = (syms_SymbolID *) malloc(sizeof (syms_SymbolID) * rhs_len);
-	if (rhs_dup == NULL) {
-		return 1;
+	if (rhs_len > 0) {
+		rhs_dup = (syms_SymbolID *) malloc(sizeof (syms_SymbolID) * rhs_len);
+		if (rhs_dup == NULL) {
+			return 1;
+		}
+		memcpy(rhs_dup, rhs, sizeof (syms_SymbolID) * rhs_len);
 	}
-	memcpy(rhs_dup, rhs, sizeof (syms_SymbolID) * rhs_len);
 	
 	pr.id = prules->next_id++;
 	pr.lhs = lhs;

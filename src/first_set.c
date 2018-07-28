@@ -281,6 +281,7 @@ static int ffset_calc_fsts_at(ffset_FirstSet *fsts, ffset_FirstSetCalcFrame *fra
     table_elem = &fsts->set.table[frame->prule_id];
     branch_elem = (table_elem->head != NULL)? &table_elem->head[frame->offset] : NULL;
     
+    // 空規則の場合はbranch_elemがNULLになるので、その場合を考慮して事前にNULLチェックをする。
     if (branch_elem != NULL && branch_elem->has_calcurated != 0) {
         return 0;
     }
@@ -345,9 +346,11 @@ static int ffset_calc_fsts_at(ffset_FirstSet *fsts, ffset_FirstSetCalcFrame *fra
             if (pr == NULL) {
                 return 1;
             }
-            if (prule->rhs[0] == pr->rhs[frame->offset]) {
-                prule = good_next_prule(&filter, grammar->prules);
-                continue;
+            if (prule->rhs_len > 0 && prule->rhs != NULL) {
+                if (prule->rhs[0] == pr->rhs[frame->offset]) {
+                    prule = good_next_prule(&filter, grammar->prules);
+                    continue;
+                }
             }
 
             ffset_set_fsts_calc_frame(&f, prule->id, 0, frame->arr_fill_index);
@@ -367,7 +370,6 @@ static int ffset_calc_fsts_at(ffset_FirstSet *fsts, ffset_FirstSetCalcFrame *fra
                 if (ret != 0) {
                     return 1;
                 }
-
                 ret = ffset_add_fsts(fsts, frame, f.prule_id, f.offset);
                 if (ret != 0) {
                     return 1;
@@ -379,6 +381,10 @@ static int ffset_calc_fsts_at(ffset_FirstSet *fsts, ffset_FirstSetCalcFrame *fra
     }
 
 RETURN:
+    if (frame->has_empty) {
+        return 0;
+    }
+
     if ((frame->arr_fill_index - frame->arr_bottom_index) > 0) {
         syms_SymbolID *set;
         size_t i;
@@ -398,6 +404,7 @@ RETURN:
             set[i] = *sym;
         }
 
+        // 空規則でない限りはbranch_elemはNULLでない想定
         if (branch_elem == NULL) {
             return 1;
         }

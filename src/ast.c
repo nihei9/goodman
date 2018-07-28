@@ -21,6 +21,7 @@ good_AST *good_new_ast_with_q(good_ASTType type, const good_Token *token, good_Q
     }
     ast->quantifier = quantifier;
     ast->parent = NULL;
+    ast->older_brother = NULL;
     ast->brother = NULL;
     ast->child = NULL;
     ast->_num_child = 0;
@@ -65,10 +66,31 @@ good_AST *good_append_child(good_AST *parent, good_AST *child)
         youngest_child = youngest_child->brother;
     }
     child->parent = parent;
+    child->older_brother = youngest_child;
     youngest_child->brother = child;
     parent->_num_child++;
 
     return parent;
+}
+
+int good_pop_ast(good_AST *ast)
+{
+    // 親ノードを持たないノードは削除できない。
+    if (ast->parent == NULL) {
+        return 1;
+    }
+
+    if (ast->older_brother != NULL) {
+        ast->parent->child = ast->brother;
+        ast->older_brother->brother = ast->brother;
+    }
+    if (ast->brother != NULL) {
+        ast->brother->older_brother = ast->older_brother;
+    }
+
+    good_delete_ast(ast);
+
+    return 0;
 }
 
 good_AST *good_get_child(const good_AST *ast, size_t offset)

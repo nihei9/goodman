@@ -19,12 +19,13 @@ int main (void)
 
 void test_1(connie_Connie *c)
 {
-    const good_Grammar *grm;
+    good_Grammar *grammar;
     good_Parser *psr;
     good_Tokenizer *tknzr;
+    good_ASTNodeStore *nodes;
     syms_SymbolStore *syms;
     FILE *target;
-    const good_AST *ast;
+    good_ASTNode *ast;
 
     target = fopen("test/data/test.goodman", "r");
     A_NOT_NULL(c, target);
@@ -35,17 +36,21 @@ void test_1(connie_Connie *c)
     tknzr = good_new_tokenizer(target, syms);
     A_NOT_NULL(c, tknzr);
 
-    psr = good_new_parser(tknzr);
+    nodes = good_new_ast_node_store();
+    A_NOT_NULL(c, nodes);
+
+    psr = good_new_parser(tknzr, nodes);
     A_NOT_NULL(c, psr);
 
     ast = good_parse(psr);
     A_NOT_NULL(c, ast);
 
-    grm = good_new_grammar((good_AST *) ast, syms);
-    A_NOT_NULL(c, grm);
+    grammar = good_new_grammar(ast, syms);
+    A_NOT_NULL(c, grammar);
 
-    good_delete_ast((good_AST *) ast);
+    good_delete_grammar(grammar);
     good_delete_parser(psr);
+    good_delete_ast_node_store(nodes);
     good_delete_tokenizer(tknzr);
     syms_delete(syms);
 }

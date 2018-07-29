@@ -8,9 +8,10 @@ struct good_Parser {
     good_Error error;
 
     jmp_buf jmp_env;
+    good_ASTNodeStore *ast_node_store;
 };
 
-good_Parser *good_new_parser(good_Tokenizer *tknzr)
+good_Parser *good_new_parser(good_Tokenizer *tknzr, good_ASTNodeStore *ast_node_store)
 {
     good_Parser *psr;
 
@@ -19,6 +20,7 @@ good_Parser *good_new_parser(good_Tokenizer *tknzr)
         return NULL;
     }
     psr->tknzr = tknzr;
+    psr->ast_node_store = ast_node_store;
 
     return psr;
 }
@@ -94,32 +96,24 @@ static void good_psr_skip_newline(good_Parser *psr)
     }
 }
 
-static good_AST *good_psr_new_ast_node_with_q(good_Parser *psr, good_AST *parent, good_ASTType type, const good_Token *tkn, good_QuantifierType quantifier)
+static good_ASTNode *good_psr_new_ast_node(good_Parser *psr, good_ASTType type)
 {
-    good_AST *node;
+    good_ASTNode *node;
 
-    node = good_new_ast_with_q(type, tkn, quantifier);
+    node = good_get_ast_node(psr->ast_node_store, type);
     if (node == NULL) {
         longjmp(psr->jmp_env, JMP_INTERNAL_ERROR);
-    }
-
-    if (parent != NULL) {
-        good_append_child(parent, node);
     }
 
     return node;
 }
 
-static good_AST *good_psr_new_ast_node(good_Parser *psr, good_AST *parent, good_ASTType type, const good_Token *tkn)
+static good_ASTNode *good_parse_prule_rhs_elem(good_Parser *psr, good_ASTNode *prule_rhs_node)
 {
-    return good_psr_new_ast_node_with_q(psr, parent, type, tkn, good_Q_1);
-}
-
-static good_AST *good_parse_prule_rhs_elem(good_Parser *psr, good_AST *parent)
-{
-    good_Token rhs_elem_tkn;
+    good_ASTNode *prule_rhs_elem_node;
     good_ASTType type;
-    good_QuantifierType q;
+    syms_SymbolID symbol;
+    good_QuantifierType quantifier;
     const good_Token *tkn;
 
     tkn = good_psr_peek_token(psr);
@@ -134,39 +128,47 @@ static good_AST *good_parse_prule_rhs_elem(good_Parser *psr, good_AST *parent)
     else {
         type = good_AST_PRULE_RHS_ELEM_STRING;
     }
-    rhs_elem_tkn = *tkn;
+    symbol = tkn->value.symbol_id;
     
-    q = good_Q_1;
+    quantifier = good_Q_1;
     tkn = good_psr_peek_token(psr);
     if (tkn->type == good_TKN_OPTION || tkn->type == good_TKN_ASTERISK || tkn->type == good_TKN_PLUS) {
         tkn = good_psr_consume_token(psr);
         if (tkn->type == good_TKN_OPTION) {
-            q = good_Q_0_OR_1;
+            quantifier = good_Q_0_OR_1;
         }
         else if (tkn->type == good_TKN_ASTERISK) {
-            q = good_Q_0_OR_MORE;
+            quantifier = good_Q_0_OR_MORE;
         }
         else if (tkn->type == good_TKN_PLUS) {
-            q = good_Q_1_OR_MORE;
+            quantifier = good_Q_1_OR_MORE;
         }
     }
 
-    return good_psr_new_ast_node_with_q(psr, parent, type, &rhs_elem_tkn, q);
+    prule_rhs_elem_node = good_psr_new_ast_node(psr, type);
+    prule_rhs_elem_node->body.prule_rhs_element.symbol = symbol;
+    prule_rhs_elem_node->body.prule_rhs_element.quantifier = quantifier;
+
+    good_append_prule_rhs_elem_node(prule_rhs_node, prule_rhs_elem_node);
+
+    return prule_rhs_elem_node;
 }
 
-const good_AST *good_parse(good_Parser *psr)
+good_ASTNode *good_parse(good_Parser *psr)
 {
-    good_AST *root_ast = NULL;
+    good_ASTNode *root_node = NULL;
     const good_Token *tkn;
 
     if (setjmp(psr->jmp_env) != 0) {
-        goto ERROR;
+        return NULL;
     }
 
-    root_ast = good_psr_new_ast_node(psr, NULL, good_AST_ROOT, NULL);
+    root_node = good_psr_new_ast_node(psr, good_AST_ROOT);
+    root_node->body.root.prule = NULL;
+    root_node->body.root.terminal_symbol = NULL;
 
     while (1) {
-        good_AST *prule_ast;
+        good_ASTNode *prule_node;
 
         good_psr_skip_newline(psr);
 
@@ -175,21 +177,23 @@ const good_AST *good_parse(good_Parser *psr)
             break;
         }
 
-        prule_ast = good_psr_new_ast_node(psr, root_ast, good_AST_PRULE, NULL);
-        good_psr_new_ast_node(psr, prule_ast, good_AST_PRULE_LHS, tkn);
+        prule_node = good_psr_new_ast_node(psr, good_AST_PRULE);
+        prule_node->body.prule.lhs = tkn->value.symbol_id;
 
         good_psr_skip_newline(psr);
 
         good_psr_match_1(psr, good_TKN_PRULE_LEADER, good_ERR_MISSING_PRULE_LEADER);
 
         while (1) {
-            good_AST *prule_rhs_ast;
+            good_ASTNode *prule_rhs_node;
 
-            prule_rhs_ast = good_psr_new_ast_node(psr, prule_ast, good_AST_PRULE_RHS, NULL);
+            prule_rhs_node = good_psr_new_ast_node(psr, good_AST_PRULE_RHS);
             
-            while (good_parse_prule_rhs_elem(psr, prule_rhs_ast) != NULL);
+            while (good_parse_prule_rhs_elem(psr, prule_rhs_node) != NULL);
             
             good_psr_skip_newline(psr);
+
+            good_append_prule_rhs_node(prule_node, prule_rhs_node);
 
             tkn = good_psr_peek_token(psr);
             if (tkn->type != good_TKN_PRULE_OR) {
@@ -199,12 +203,11 @@ const good_AST *good_parse(good_Parser *psr)
         }
 
         good_psr_match_1(psr, good_TKN_PRULE_TERMINATOR, good_ERR_UNTERMINATED_PRULE);
+
+        // ひとまず全てpruleに接続する。
+        // （後続の正規化のフェーズで終端記号の定義を分離する）
+        good_append_prule_node(root_node, prule_node);
     }
 
-    return root_ast;
-
-ERROR:
-    good_delete_ast(root_ast);
-
-    return NULL;
+    return root_node;
 }

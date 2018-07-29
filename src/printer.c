@@ -11,24 +11,13 @@ static void good_print_grammar(const good_Grammar *grammar)
 
         for (lhs_id = grammar->terminal_symbol_id_from; lhs_id <= grammar->terminal_symbol_id_to; lhs_id++) {
             const char *lhs_str;
-            good_ProductionRuleFilter filter;
-            const good_ProductionRule *prule;
-
+            
             lhs_str = syms_lookup(grammar->syms, lhs_id);
             if (lhs_str == NULL) {
                 return;
             }
 
-            good_set_prule_filter_by_lhs(&filter, lhs_id);
-            prule = good_next_prule(&filter, grammar->prules);
-            if (prule == NULL) {
-                return;
-            }
-            while (prule != NULL) {
-                printf("%s %s\n", lhs_str, syms_lookup(grammar->syms, prule->rhs[0]));
-                
-                prule = good_next_prule(&filter, grammar->prules);
-            }
+            printf("%s\n", lhs_str);
         }
     }
 

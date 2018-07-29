@@ -5,7 +5,7 @@
 #include "grammar.h"
 #include <stdlib.h>
 
-const good_Grammar *good_new_grammar(good_AST *root_ast, syms_SymbolStore *syms);
+good_Grammar *good_new_grammar(good_ASTNode *root_node, syms_SymbolStore *syms);
 void good_delete_grammar(good_Grammar *grammar);
 
 #endif

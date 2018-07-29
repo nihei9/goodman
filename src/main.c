@@ -2,6 +2,7 @@
 #include "first_set.h"
 #include "follow_set.h"
 #include "ast_converter.h"
+#include "ast_normalizer.h"
 #include "parser.h"
 #include "tokenizer.h"
 #include <stdio.h>
@@ -49,10 +50,11 @@ static int good_execute(const good_GoodmanParameters *params)
     good_PrinterParameters pprams;
     ffset_FirstSet *fsts = NULL;
     ffset_FollowSet *flws = NULL;
-    const good_Grammar *grammar = NULL;
-    const good_AST *ast = NULL;
+    good_Grammar *grammar = NULL;
+    good_ASTNode *ast = NULL;
     good_Parser *psr = NULL;
     good_Tokenizer *tknzr = NULL;
+    good_ASTNodeStore *nodes = NULL;
     syms_SymbolStore *syms = NULL;
     FILE *target = NULL;
     int exit_code = 1;
@@ -79,7 +81,14 @@ static int good_execute(const good_GoodmanParameters *params)
         goto END;
     }
 
-    psr = good_new_parser(tknzr);
+    nodes = good_new_ast_node_store();
+    if (nodes == NULL) {
+        printf("Failed to create node store.\n");
+
+        goto END;
+    }
+
+    psr = good_new_parser(tknzr, nodes);
     if (psr == NULL) {
         printf("Failed to create parser.\n");
 
@@ -95,7 +104,14 @@ static int good_execute(const good_GoodmanParameters *params)
         goto END;
     }
 
-    grammar = good_new_grammar((good_AST *) ast, syms);
+    ast = good_normalize_ast(nodes, ast, syms);
+    if (ast == NULL) {
+        printf("Failed to normalize AST.\n");
+
+        goto END;
+    }
+
+    grammar = good_new_grammar(ast, syms);
     if (grammar == NULL) {
         printf("Failed to create grammar.\n");
 
@@ -144,8 +160,8 @@ static int good_execute(const good_GoodmanParameters *params)
 END:
     ffset_delete_flws(flws);
     ffset_delete_fsts(fsts);
-    good_delete_grammar((good_Grammar *) grammar);
-    good_delete_ast((good_AST *) ast);
+    good_delete_grammar(grammar);
+    good_delete_ast_node_store(nodes);
     good_delete_parser(psr);
     good_delete_tokenizer(tknzr);
     syms_delete(syms);

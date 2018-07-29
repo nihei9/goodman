@@ -1,6 +1,6 @@
 # This is test
 
-:||;?+*#This is comment
+:||;?+*()#This is comment
 
 xxxx xxxx_yyyy    __XXXX__ Xxxx    # This is comment
 

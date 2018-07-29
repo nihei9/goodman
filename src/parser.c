@@ -54,6 +54,12 @@ static const good_Token *good_psr_consume_token(good_Parser *psr)
         longjmp(psr->jmp_env, JMP_INTERNAL_ERROR);
     }
 
+    if (tkn->type == good_TKN_L_PAREN || tkn->type == good_TKN_R_PAREN) {
+        psr->error.code = good_ERR_UNIMPLEMENTED_FEATURE;
+
+        longjmp(psr->jmp_env, JMP_SYNTAX_ERROR);
+    }
+
     return tkn;
 }
 
@@ -66,6 +72,12 @@ static const good_Token *good_psr_peek_token(good_Parser *psr)
         psr->error = *good_get_tokenizer_error(psr->tknzr);
 
         longjmp(psr->jmp_env, JMP_INTERNAL_ERROR);
+    }
+
+    if (tkn->type == good_TKN_L_PAREN || tkn->type == good_TKN_R_PAREN) {
+        psr->error.code = good_ERR_UNIMPLEMENTED_FEATURE;
+
+        longjmp(psr->jmp_env, JMP_SYNTAX_ERROR);
     }
 
     return tkn;

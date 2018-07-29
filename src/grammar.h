@@ -8,6 +8,8 @@ typedef struct good_Grammar {
     syms_SymbolStore *syms;
     syms_SymbolID terminal_symbol_id_from;
     syms_SymbolID terminal_symbol_id_to;
+    syms_SymbolID non_terminal_symbol_id_from;
+    syms_SymbolID non_terminal_symbol_id_to;
     good_ProductionRules *prules;
     syms_SymbolID start_symbol;
 } good_Grammar;

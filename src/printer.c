@@ -11,7 +11,7 @@ static void good_print_grammar(const good_Grammar *grammar)
 
         for (lhs_id = grammar->terminal_symbol_id_from; lhs_id <= grammar->terminal_symbol_id_to; lhs_id++) {
             const char *lhs_str;
-            
+
             lhs_str = syms_lookup(grammar->syms, lhs_id);
             if (lhs_str == NULL) {
                 return;
@@ -96,29 +96,23 @@ static void good_print_ffset(const good_Grammar *grammar, const ffset_FirstSet *
 
     // FOLLOW集合表示
     {
-        const good_ProductionRule *prule;
-        good_ProductionRuleFilter filter;
-
+        syms_SymbolID lhs_id;
+        
         printf("@follow-set\n");
 
-        good_set_prule_filter_match_all(&filter);
-        while ((prule = good_next_prule(&filter, grammar->prules)) != NULL) {
+        for (lhs_id = grammar->non_terminal_symbol_id_from; lhs_id <= grammar->non_terminal_symbol_id_to; lhs_id++) {
             ffset_FollowSetItem item;
             size_t i;
             int ret;
 
-            if (prule->lhs >= grammar->terminal_symbol_id_from && prule->lhs <= grammar->terminal_symbol_id_to) {
-                continue;
-            }
-
             item.input.flws = flws;
-            item.input.symbol = prule->lhs;
+            item.input.symbol = lhs_id;
             ret = ffset_get_flws(&item);
             if (ret != 0) {
                 return;
             }
 
-            printf("%lu(%s)", prule->lhs, syms_lookup(grammar->syms, prule->lhs));
+            printf("%s", syms_lookup(grammar->syms, lhs_id));
             if (item.output.has_eof) {
                 printf(" t");
             }
@@ -126,7 +120,7 @@ static void good_print_ffset(const good_Grammar *grammar, const ffset_FirstSet *
                 printf(" f");
             }
             for (i = 0; i < item.output.len; i++) {
-                printf(" %lu(%s)", item.output.set[i], syms_lookup(grammar->syms, item.output.set[i]));
+                printf(" %s", syms_lookup(grammar->syms, item.output.set[i]));
             }
             printf("\n");
         }

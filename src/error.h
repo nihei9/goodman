@@ -14,6 +14,7 @@ typedef enum good_ErrorCode {
     good_ERR_UNTERMINATED_PRULE,
     good_ERR_MISSING_PRULE_LEADER,
     good_ERR_UNEXPECTED_TOKEN_IN_PRULE,
+    good_ERR_UNCLOSED_GROUP,
 
     good_ERR_CENTINEL,
 } good_ErrorCode;

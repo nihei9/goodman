@@ -74,8 +74,10 @@ static void good_initialize_ast_node_body(good_ASTNode *node)
         break;
     case good_AST_PRULE_RHS_ELEM_SYMBOL:
     case good_AST_PRULE_RHS_ELEM_STRING:
+    case good_AST_PRULE_RHS_ELEM_GROUP:
         {
             good_PRuleRHSElementNodeBody *body = &node->body.prule_rhs_element;
+            body->rhs = NULL;
             body->quantifier = good_Q_1;
             body->prev = NULL;
             body->next = NULL;
@@ -201,27 +203,52 @@ int good_append_tsymbol_prule_node(good_ASTNode *root_node, good_ASTNode *prule_
 
 int good_append_prule_rhs_node(good_ASTNode *prule_node, good_ASTNode *prule_rhs_node)
 {
-    good_PRuleNodeBody *prule_body;
-
-    if (prule_node->type != good_AST_PRULE || prule_rhs_node->type != good_AST_PRULE_RHS) {
+    if (!(prule_node->type == good_AST_PRULE || prule_node->type == good_AST_PRULE_RHS_ELEM_GROUP)
+        || prule_rhs_node->type != good_AST_PRULE_RHS) {
         return 1;
     }
 
-    prule_body = &prule_node->body.prule;
-    if (prule_body->rhs == NULL) {
-        prule_body->rhs = prule_rhs_node;
+    if (prule_node->type == good_AST_PRULE) {
+        good_PRuleNodeBody *prule_body;
 
-        return 0;
+        prule_body = &prule_node->body.prule;
+        if (prule_body->rhs == NULL) {
+            prule_body->rhs = prule_rhs_node;
+
+            return 0;
+        }
+        else {
+            good_ASTNode *node;
+
+            for (node = prule_body->rhs; node != NULL; node = node->body.prule_rhs.next) {
+                if (node->body.prule_rhs.next == NULL) {
+                    prule_rhs_node->body.prule_rhs.prev = node;
+                    node->body.prule_rhs.next = prule_rhs_node;
+                    
+                    return 0;
+                }
+            }
+        }
     }
     else {
-        good_ASTNode *node;
+        good_PRuleRHSElementNodeBody *prule_body;
 
-        for (node = prule_body->rhs; node != NULL; node = node->body.prule_rhs.next) {
-            if (node->body.prule_rhs.next == NULL) {
-                prule_rhs_node->body.prule_rhs.prev = node;
-                node->body.prule_rhs.next = prule_rhs_node;
-                
-                return 0;
+        prule_body = &prule_node->body.prule_rhs_element;
+        if (prule_body->rhs == NULL) {
+            prule_body->rhs = prule_rhs_node;
+
+            return 0;
+        }
+        else {
+            good_ASTNode *node;
+
+            for (node = prule_body->rhs; node != NULL; node = node->body.prule_rhs.next) {
+                if (node->body.prule_rhs.next == NULL) {
+                    prule_rhs_node->body.prule_rhs.prev = node;
+                    node->body.prule_rhs.next = prule_rhs_node;
+                    
+                    return 0;
+                }
             }
         }
     }
@@ -234,7 +261,9 @@ int good_append_prule_rhs_elem_node(good_ASTNode *prule_rhs_node, good_ASTNode *
     good_PRuleRHSNodeBody *prule_rhs_body;
 
     if (prule_rhs_node->type != good_AST_PRULE_RHS
-        || (prule_rhs_elem_node->type != good_AST_PRULE_RHS_ELEM_SYMBOL && prule_rhs_elem_node->type != good_AST_PRULE_RHS_ELEM_STRING)) {
+        || !(prule_rhs_elem_node->type == good_AST_PRULE_RHS_ELEM_SYMBOL
+            || prule_rhs_elem_node->type == good_AST_PRULE_RHS_ELEM_STRING
+            || prule_rhs_elem_node->type == good_AST_PRULE_RHS_ELEM_GROUP)) {
         return 1;
     }
 
@@ -301,9 +330,17 @@ void good_print_ast(const good_ASTNode *root_node, const syms_SymbolStore *syms)
                 if (prule_rhs_elem_node->type == good_AST_PRULE_RHS_ELEM_STRING) {
                     printf(" '%s'", syms_lookup(syms, prule_rhs_elem_body->symbol));
                 }
-                else {
+                else if (prule_rhs_elem_node->type == good_AST_PRULE_RHS_ELEM_SYMBOL) {
                     printf(" %s", syms_lookup(syms, prule_rhs_elem_body->symbol));
                 }
+                else if (prule_rhs_elem_node->type == good_AST_PRULE_RHS_ELEM_GROUP) {
+                    // FIXME
+                    printf(" <GROUP>");
+                }
+                else {
+                    printf(" <UNKNOWN ELEMENT>");
+                }
+                
                 if (prule_rhs_elem_body->quantifier == good_Q_0_OR_1) {
                     printf("?");
                 }

@@ -21,6 +21,10 @@ static void good_print_grammar(const good_Grammar *grammar)
         }
     }
 
+    // 開始記号
+    printf("@start-symbol\n");
+    printf("%s\n", syms_lookup(grammar->syms, grammar->start_symbol));
+
     // 生成規則表示
     {
         const good_ProductionRule *prule;

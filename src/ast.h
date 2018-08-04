@@ -9,6 +9,7 @@ typedef enum good_ASTType {
     good_AST_PRULE_RHS,
     good_AST_PRULE_RHS_ELEM_STRING,
     good_AST_PRULE_RHS_ELEM_SYMBOL,
+    good_AST_PRULE_RHS_ELEM_GROUP,
 } good_ASTType;
 
 typedef enum good_QuantifierType {
@@ -39,7 +40,8 @@ typedef struct good_PRuleRHSNodeBody {
 } good_PRuleRHSNodeBody;
 
 typedef struct good_PRuleRHSElementNodeBody {
-    syms_SymbolID symbol;
+    syms_SymbolID symbol;   // good_AST_PRULE_RHS_ELEM_STRING、good_AST_PRULE_RHS_ELEM_SYMBOL の場合にのみ使用する。
+    good_ASTNode *rhs;      // good_AST_PRULE_RHS_ELEM_GROUP の場合にみ使用する。
     good_QuantifierType quantifier;
     good_ASTNode *prev;
     good_ASTNode *next;

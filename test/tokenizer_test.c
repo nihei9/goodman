@@ -85,6 +85,18 @@ void test_1(connie_Connie *c)
     tkn = good_consume_token(tknzr);
     A_NOT_NULL(c, tkn);
     if (tkn != NULL) {
+        A_EQL_INT(c, good_TKN_L_PAREN, tkn->type);
+    }
+
+    tkn = good_consume_token(tknzr);
+    A_NOT_NULL(c, tkn);
+    if (tkn != NULL) {
+        A_EQL_INT(c, good_TKN_R_PAREN, tkn->type);
+    }
+
+    tkn = good_consume_token(tknzr);
+    A_NOT_NULL(c, tkn);
+    if (tkn != NULL) {
         A_EQL_INT(c, good_TKN_NEW_LINE, tkn->type);
     }
 

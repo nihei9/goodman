@@ -8,10 +8,10 @@ struct good_Parser {
     good_Error error;
 
     jmp_buf jmp_env;
-    good_ASTNodeStore *ast_node_store;
+    good_ASTNodeStore *nodes;
 };
 
-good_Parser *good_new_parser(good_Tokenizer *tknzr, good_ASTNodeStore *ast_node_store)
+good_Parser *good_new_parser(good_Tokenizer *tknzr, good_ASTNodeStore *nodes)
 {
     good_Parser *psr;
 
@@ -20,7 +20,7 @@ good_Parser *good_new_parser(good_Tokenizer *tknzr, good_ASTNodeStore *ast_node_
         return NULL;
     }
     psr->tknzr = tknzr;
-    psr->ast_node_store = ast_node_store;
+    psr->nodes = nodes;
 
     return psr;
 }
@@ -100,7 +100,7 @@ static good_ASTNode *good_psr_new_ast_node(good_Parser *psr, good_ASTType type)
 {
     good_ASTNode *node;
 
-    node = good_get_ast_node(psr->ast_node_store, type);
+    node = good_get_ast_node(psr->nodes, type);
     if (node == NULL) {
         longjmp(psr->jmp_env, JMP_INTERNAL_ERROR);
     }
@@ -108,50 +108,88 @@ static good_ASTNode *good_psr_new_ast_node(good_Parser *psr, good_ASTType type)
     return node;
 }
 
+static good_ASTNode *good_parse_prule_rhs(good_Parser *psr, good_ASTNode *prule_node);
+
 static good_ASTNode *good_parse_prule_rhs_elem(good_Parser *psr, good_ASTNode *prule_rhs_node)
 {
     good_ASTNode *prule_rhs_elem_node;
-    good_ASTType type;
-    syms_SymbolID symbol;
-    good_QuantifierType quantifier;
     const good_Token *tkn;
 
     tkn = good_psr_peek_token(psr);
-    if (tkn->type != good_TKN_NAME && tkn->type != good_TKN_STRING) {
+    if (tkn->type != good_TKN_NAME && tkn->type != good_TKN_STRING && tkn->type != good_TKN_L_PAREN) {
         return NULL;
     }
 
     tkn = good_psr_consume_token(psr);
-    if (tkn->type == good_TKN_NAME) {
-        type = good_AST_PRULE_RHS_ELEM_SYMBOL;
+    if (tkn->type == good_TKN_L_PAREN) {
+        prule_rhs_elem_node = good_psr_new_ast_node(psr, good_AST_PRULE_RHS_ELEM_GROUP);
+
+        good_parse_prule_rhs(psr, prule_rhs_elem_node);
+        
+        good_psr_match_1(psr, good_TKN_R_PAREN, good_ERR_UNCLOSED_GROUP);
     }
     else {
-        type = good_AST_PRULE_RHS_ELEM_STRING;
-    }
-    symbol = tkn->value.symbol_id;
-    
-    quantifier = good_Q_1;
-    tkn = good_psr_peek_token(psr);
-    if (tkn->type == good_TKN_OPTION || tkn->type == good_TKN_ASTERISK || tkn->type == good_TKN_PLUS) {
-        tkn = good_psr_consume_token(psr);
-        if (tkn->type == good_TKN_OPTION) {
-            quantifier = good_Q_0_OR_1;
-        }
-        else if (tkn->type == good_TKN_ASTERISK) {
-            quantifier = good_Q_0_OR_MORE;
-        }
-        else if (tkn->type == good_TKN_PLUS) {
-            quantifier = good_Q_1_OR_MORE;
-        }
-    }
+        good_ASTType type;
 
-    prule_rhs_elem_node = good_psr_new_ast_node(psr, type);
-    prule_rhs_elem_node->body.prule_rhs_element.symbol = symbol;
-    prule_rhs_elem_node->body.prule_rhs_element.quantifier = quantifier;
+        if (tkn->type == good_TKN_NAME) {
+            type = good_AST_PRULE_RHS_ELEM_SYMBOL;
+        }
+        else {
+            type = good_AST_PRULE_RHS_ELEM_STRING;
+        }
+
+        prule_rhs_elem_node = good_psr_new_ast_node(psr, type);
+        prule_rhs_elem_node->body.prule_rhs_element.symbol = tkn->value.symbol_id;
+    }
+    
+    {
+        good_QuantifierType quantifier = good_Q_1;
+        
+        tkn = good_psr_peek_token(psr);
+        if (tkn->type == good_TKN_OPTION || tkn->type == good_TKN_ASTERISK || tkn->type == good_TKN_PLUS) {
+            tkn = good_psr_consume_token(psr);
+            if (tkn->type == good_TKN_OPTION) {
+                quantifier = good_Q_0_OR_1;
+            }
+            else if (tkn->type == good_TKN_ASTERISK) {
+                quantifier = good_Q_0_OR_MORE;
+            }
+            else if (tkn->type == good_TKN_PLUS) {
+                quantifier = good_Q_1_OR_MORE;
+            }
+        }
+
+        prule_rhs_elem_node->body.prule_rhs_element.quantifier = quantifier;
+    }
 
     good_append_prule_rhs_elem_node(prule_rhs_node, prule_rhs_elem_node);
 
     return prule_rhs_elem_node;
+}
+
+static good_ASTNode *good_parse_prule_rhs(good_Parser *psr, good_ASTNode *prule_node)
+{
+    const good_Token *tkn;
+    
+    while (1) {
+        good_ASTNode *prule_rhs_node;
+
+        prule_rhs_node = good_psr_new_ast_node(psr, good_AST_PRULE_RHS);
+        
+        while (good_parse_prule_rhs_elem(psr, prule_rhs_node) != NULL);
+        
+        good_psr_skip_newline(psr);
+
+        good_append_prule_rhs_node(prule_node, prule_rhs_node);
+
+        tkn = good_psr_peek_token(psr);
+        if (tkn->type != good_TKN_PRULE_OR) {
+            break;
+        }
+        good_psr_consume_token(psr);
+    }
+
+    return prule_node;
 }
 
 good_ASTNode *good_parse(good_Parser *psr)
@@ -184,23 +222,7 @@ good_ASTNode *good_parse(good_Parser *psr)
 
         good_psr_match_1(psr, good_TKN_PRULE_LEADER, good_ERR_MISSING_PRULE_LEADER);
 
-        while (1) {
-            good_ASTNode *prule_rhs_node;
-
-            prule_rhs_node = good_psr_new_ast_node(psr, good_AST_PRULE_RHS);
-            
-            while (good_parse_prule_rhs_elem(psr, prule_rhs_node) != NULL);
-            
-            good_psr_skip_newline(psr);
-
-            good_append_prule_rhs_node(prule_node, prule_rhs_node);
-
-            tkn = good_psr_peek_token(psr);
-            if (tkn->type != good_TKN_PRULE_OR) {
-                break;
-            }
-            good_psr_consume_token(psr);
-        }
+        good_parse_prule_rhs(psr, prule_node);
 
         good_psr_match_1(psr, good_TKN_PRULE_TERMINATOR, good_ERR_UNTERMINATED_PRULE);
 

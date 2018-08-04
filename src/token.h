@@ -13,6 +13,8 @@ typedef enum good_TokenType {
     good_TKN_OPTION,            // ?
     good_TKN_PLUS,              // +
     good_TKN_ASTERISK,          // *
+    good_TKN_L_PAREN,           // (
+    good_TKN_R_PAREN,           // )
     good_TKN_NEW_LINE,          // \n
     good_TKN_EOF,
 } good_TokenType;

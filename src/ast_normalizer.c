@@ -155,10 +155,86 @@ static good_ASTNode *good_rewrite_rhs_elem_node(good_ASTNode *root_node, syms_Sy
     return root_node;
 }
 
+// グルーピングされた生成規則を独立した生成規則として切り出す。
+static good_ASTNode *good_normalize_ast_1(good_ASTNodeStore *nodes, good_ASTNode *root_node, syms_SymbolStore *syms, int *num)
+{
+    good_ASTNode *prule_node;
+    good_RootNodeBody *root_body;
+
+    root_body = &root_node->body.root;
+
+    for (prule_node = root_body->prule; prule_node != NULL; prule_node = prule_node->body.prule.next) {
+        good_PRuleNodeBody *prule_body;
+        good_ASTNode *prule_rhs_node;
+
+        if (good_is_tsymbol_node(prule_node)) {
+            continue;
+        }
+
+        prule_body = &prule_node->body.prule;
+
+        for (prule_rhs_node = prule_body->rhs; prule_rhs_node != NULL; prule_rhs_node = prule_rhs_node->body.prule_rhs.next) {
+            good_PRuleRHSNodeBody *prule_rhs_body;
+            good_ASTNode *prule_rhs_elem_node;
+
+            prule_rhs_body = &prule_rhs_node->body.prule_rhs;
+
+            for (prule_rhs_elem_node = prule_rhs_body->elem; prule_rhs_elem_node != NULL; prule_rhs_elem_node = prule_rhs_elem_node->body.prule_rhs_element.next) {
+                good_PRuleRHSElementNodeBody *prule_rhs_elem_body;
+
+                if (prule_rhs_elem_node->type != good_AST_PRULE_RHS_ELEM_GROUP) {
+                    continue;
+                }
+
+                prule_rhs_elem_body = &prule_rhs_elem_node->body.prule_rhs_element;
+
+                // グループを生成規則として切り出す。
+                {
+                    char new_lhs_str_buffer[64];
+                    const char *new_lhs_str;
+                    const syms_SymbolID *new_lhs_id;
+                    good_ASTNode *new_prule_node;
+
+                    new_lhs_str = good_new_symbol_name(*num, new_lhs_str_buffer, sizeof(new_lhs_str_buffer));
+                    if (new_lhs_str == NULL) {
+                        return NULL;
+                    }
+                    new_lhs_id = syms_put(syms, new_lhs_str);
+                    if (new_lhs_id == NULL) {
+                        return NULL;
+                    }
+
+                    // 新たな生成規則のASTを生成
+                    new_prule_node = good_get_ast_node(nodes, good_AST_PRULE);
+                    if (new_prule_node == NULL) {
+                        return NULL;
+                    }
+                    new_prule_node->body.prule.lhs = *new_lhs_id;
+
+                    // グループの右辺を新たに作成した生成規則の要素として追加する。
+                    good_append_prule_rhs_node(new_prule_node, prule_rhs_elem_body->rhs);
+                    
+                    // グループとして解析された要素を書き換える。
+                    prule_rhs_elem_node->type = good_AST_PRULE_RHS_ELEM_SYMBOL;
+                    prule_rhs_elem_body->symbol = *new_lhs_id;
+                    prule_rhs_elem_body->rhs = NULL;
+
+                    // 新たに作成した生成規則をroot配下に追加する。
+                    good_append_prule_node(root_node, new_prule_node);
+
+                    *num = *num + 1;
+                }
+            }
+        }
+    }
+
+    return root_node;
+}
+
 // 生成規則と終端記号の定義を分離する。
 // * 生成規則は good_RootNodeBody.prule へ残し、
 // * 終端器号は good_RootNodeBody.terminal_symbolへ移動する。
-static good_ASTNode *good_normalize_ast_1(good_ASTNodeStore *nodes, good_ASTNode *root_node, syms_SymbolStore *syms, int *num)
+static good_ASTNode *good_normalize_ast_2(good_ASTNodeStore *nodes, good_ASTNode *root_node, syms_SymbolStore *syms, int *num)
 {
     good_ASTNode *prule_node;
     good_RootNodeBody *root_body;
@@ -205,7 +281,7 @@ static good_ASTNode *good_normalize_ast_1(good_ASTNodeStore *nodes, good_ASTNode
 }
 
 // 生成規則の右辺に現れる文字列を終端記号として定義する。
-static good_ASTNode *good_normalize_ast_2(good_ASTNodeStore *nodes, good_ASTNode *root_node, syms_SymbolStore *syms, int *num)
+static good_ASTNode *good_normalize_ast_3(good_ASTNodeStore *nodes, good_ASTNode *root_node, syms_SymbolStore *syms, int *num)
 {
     char new_lhs_str_buffer[64];
     const char *new_lhs_str;
@@ -274,7 +350,7 @@ static good_ASTNode *good_normalize_ast_2(good_ASTNodeStore *nodes, good_ASTNode
 }
 
 // 量指定子をもつ生成規則を、量指定子をもたない形式に変換する。
-static good_ASTNode *good_normalize_ast_3(good_ASTNodeStore *nodes, good_ASTNode *root_node, syms_SymbolStore *syms, int *num)
+static good_ASTNode *good_normalize_ast_4(good_ASTNodeStore *nodes, good_ASTNode *root_node, syms_SymbolStore *syms, int *num)
 {
     const good_ASTNode *prule_node;
 
@@ -520,6 +596,7 @@ good_ASTNode *good_normalize_ast(good_ASTNodeStore *nodes, good_ASTNode *root_no
     good_ASTNode *ast;
     int num;
 
+    // printf("[good_normalize_ast] --------------------------------\n");
     // good_print_ast(root_node, syms);
 
     ast = good_normalize_ast_1(nodes, root_node, syms, &num);
@@ -527,6 +604,7 @@ good_ASTNode *good_normalize_ast(good_ASTNodeStore *nodes, good_ASTNode *root_no
         return NULL;
     }
 
+    // printf("[good_normalize_ast] --------------------------------\n");
     // good_print_ast(root_node, syms);
 
     ast = good_normalize_ast_2(nodes, root_node, syms, &num);
@@ -534,6 +612,7 @@ good_ASTNode *good_normalize_ast(good_ASTNodeStore *nodes, good_ASTNode *root_no
         return NULL;
     }
 
+    // printf("[good_normalize_ast] --------------------------------\n");
     // good_print_ast(root_node, syms);
 
     ast = good_normalize_ast_3(nodes, root_node, syms, &num);
@@ -541,7 +620,17 @@ good_ASTNode *good_normalize_ast(good_ASTNodeStore *nodes, good_ASTNode *root_no
         return NULL;
     }
 
+    // printf("[good_normalize_ast] --------------------------------\n");
     // good_print_ast(root_node, syms);
+
+    ast = good_normalize_ast_4(nodes, root_node, syms, &num);
+    if (ast == NULL) {
+        return NULL;
+    }
+
+    // printf("[good_normalize_ast] --------------------------------\n");
+    // good_print_ast(root_node, syms);
+    // printf("[good_normalize_ast] --------------------------------\n");
 
     return ast;
 }

@@ -190,6 +190,16 @@ static const good_Token *good_tokenize(good_Tokenizer *tknzr)
 
         goto RETURN;
     }
+    if (c.c == '(') {
+        tkn.type = good_TKN_L_PAREN;
+
+        goto RETURN;
+    }
+    if (c.c == ')') {
+        tkn.type = good_TKN_R_PAREN;
+
+        goto RETURN;
+    }
     if (c.c == '\'') {
         const syms_SymbolID *id;
         size_t i = 0;

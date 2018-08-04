@@ -49,6 +49,11 @@ static const good_ErrorMessageAndHint error_messages[good_ERR_CENTINEL] = {
         "Unexpected token was detected in a production rule.",
         NULL,
     },
+    // UNCLOSED_GROUP
+    {
+        "Group is unclosed.",
+        "Group should be surrounded by () sign.",
+    },
 };
 
 void good_print_error(const good_Error *error)

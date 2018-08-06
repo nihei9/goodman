@@ -5,6 +5,7 @@
 #include "ast_normalizer.h"
 #include "parser.h"
 #include "tokenizer.h"
+#include "logger.h"
 #include <stdio.h>
 
 typedef struct good_GoodmanParameters {
@@ -59,6 +60,14 @@ static int good_execute(const good_GoodmanParameters *params)
     FILE *target = NULL;
     int exit_code = 1;
     int ret;
+
+    ret = good_initialize_logger("goodman.log");
+    if (ret != 0) {
+        printf("Failed to initialize logger\n");
+
+        goto END;
+    }
+    good_log_info("Initialized logger");
     
     target = fopen(params->filename, "r");
     if (target == NULL) {
@@ -103,6 +112,7 @@ static int good_execute(const good_GoodmanParameters *params)
 
         goto END;
     }
+    good_log_info("Parsed .goodman file");
 
     ast = good_normalize_ast(nodes, ast, syms);
     if (ast == NULL) {
@@ -130,6 +140,7 @@ static int good_execute(const good_GoodmanParameters *params)
 
         goto END;
     }
+    good_log_info("Calcurated FIRST SET");
 
     flws = ffset_new_flws();
     if (flws == NULL) {
@@ -143,6 +154,7 @@ static int good_execute(const good_GoodmanParameters *params)
 
         goto END;
     }
+    good_log_info("Calcurated FOLLOW SET");
 
     pprams.grammar = grammar;
     pprams.first_set = fsts;
@@ -154,6 +166,7 @@ static int good_execute(const good_GoodmanParameters *params)
 
         goto END;
     }
+    good_log_info("Printed results");
 
     exit_code = 0;
 
@@ -168,6 +181,8 @@ END:
     if (target != NULL) {
         fclose(target);
     }
+
+    good_finalize_logger();
     
     return exit_code;
 }

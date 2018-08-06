@@ -36,7 +36,8 @@ build $builddir/parser.o: cxx $root/src/parser.c
 build $builddir/ast_normalizer.o: cxx $root/src/ast_normalizer.c
 build $builddir/ast_converter.o: cxx $root/src/ast_converter.c
 build $builddir/printer.o: cxx $root/src/printer.c
-build $builddir/lib/libgoodman.a: ar $builddir/error.o $builddir/production_rules.o $builddir/first_set.o $builddir/follow_set.o $builddir/tokenizer.o $builddir/ast.o $builddir/parser.o $builddir/ast_normalizer.o $builddir/ast_converter.o $builddir/printer.o
+build $builddir/logger.o: cxx $root/src/logger.c
+build $builddir/lib/libgoodman.a: ar $builddir/error.o $builddir/production_rules.o $builddir/first_set.o $builddir/follow_set.o $builddir/tokenizer.o $builddir/ast.o $builddir/parser.o $builddir/ast_normalizer.o $builddir/ast_converter.o $builddir/printer.o $builddir/logger.o
 
 build $builddir/main.o: cxx $root/src/main.c
 build $builddir/bin/goodman: link $builddir/main.o | $builddir/lib/libgoodman.a

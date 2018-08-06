@@ -1,4 +1,5 @@
 #include "ast.h"
+#include "logger.h"
 #include <stdlib.h>
 
 struct good_ASTNodeStore {
@@ -293,9 +294,11 @@ void good_print_ast(const good_ASTNode *root_node, const syms_SymbolStore *syms)
 {
     const good_RootNodeBody *root_body;
     const good_ASTNode *prule_node;
+    const char *arr[256];
 
     root_body = &root_node->body.root;
-    printf("terminal_symbol\n");
+    arr[0] = "terminal_symbol";
+    good_log_array(arr, 1);
     for (prule_node = root_body->terminal_symbol; prule_node != NULL; prule_node = prule_node->body.prule.next) {
         const good_PRuleNodeBody *prule_body;
         const good_ASTNode *prule_rhs_node;
@@ -304,13 +307,19 @@ void good_print_ast(const good_ASTNode *root_node, const syms_SymbolStore *syms)
         for (prule_rhs_node = prule_body->rhs; prule_rhs_node != NULL; prule_rhs_node = prule_rhs_node->body.prule_rhs.next) {
             const good_PRuleRHSNodeBody *prule_rhs_body;
             const good_PRuleRHSElementNodeBody *prule_rhs_elem_body;
+            size_t i = 0;
 
             prule_rhs_body = &prule_rhs_node->body.prule_rhs;
             prule_rhs_elem_body = &prule_rhs_body->elem->body.prule_rhs_element;
-            printf("    %s: '%s'\n", syms_lookup(syms, prule_body->lhs), syms_lookup(syms, prule_rhs_elem_body->symbol));
+            arr[i++] = "    ";
+            arr[i++] = syms_lookup(syms, prule_body->lhs);
+            arr[i++] = ": ";
+            arr[i++] = syms_lookup(syms, prule_rhs_elem_body->symbol);
+            good_log_array(arr, i);
         }
     }
-    printf("production rule\n");
+    arr[0] = "production rule";
+    good_log_array(arr, 1);
     for (prule_node = root_body->prule; prule_node != NULL; prule_node = prule_node->body.prule.next) {
         const good_PRuleNodeBody *prule_body;
         const good_ASTNode *prule_rhs_node;
@@ -319,39 +328,49 @@ void good_print_ast(const good_ASTNode *root_node, const syms_SymbolStore *syms)
         for (prule_rhs_node = prule_body->rhs; prule_rhs_node != NULL; prule_rhs_node = prule_rhs_node->body.prule_rhs.next) {
             const good_PRuleRHSNodeBody *prule_rhs_body;
             const good_ASTNode *prule_rhs_elem_node;
+            size_t i = 0;
 
-            printf("    %s:", syms_lookup(syms, prule_body->lhs));
+            arr[i++] = "    ";
+            arr[i++] = syms_lookup(syms, prule_body->lhs);
+            arr[i++] = ":";
 
             prule_rhs_body = &prule_rhs_node->body.prule_rhs;
             for (prule_rhs_elem_node = prule_rhs_body->elem; prule_rhs_elem_node != NULL; prule_rhs_elem_node = prule_rhs_elem_node->body.prule_rhs_element.next) {
                 const good_PRuleRHSElementNodeBody *prule_rhs_elem_body;
 
+                // 長過ぎる生成規則は要素を省略して表示する。
+                if (i >= 254) {
+                    arr[i++] = "...";
+                }
+
                 prule_rhs_elem_body = &prule_rhs_elem_node->body.prule_rhs_element;
                 if (prule_rhs_elem_node->type == good_AST_PRULE_RHS_ELEM_STRING) {
-                    printf(" '%s'", syms_lookup(syms, prule_rhs_elem_body->symbol));
+                    arr[i++] = " ";
+                    arr[i++] = syms_lookup(syms, prule_rhs_elem_body->symbol);
                 }
                 else if (prule_rhs_elem_node->type == good_AST_PRULE_RHS_ELEM_SYMBOL) {
-                    printf(" %s", syms_lookup(syms, prule_rhs_elem_body->symbol));
+                    arr[i++] = " ";
+                    arr[i++] = syms_lookup(syms, prule_rhs_elem_body->symbol);
                 }
                 else if (prule_rhs_elem_node->type == good_AST_PRULE_RHS_ELEM_GROUP) {
                     // FIXME
-                    printf(" <GROUP>");
+                    arr[i++] = " <GROUP>";
                 }
                 else {
-                    printf(" <UNKNOWN ELEMENT>");
+                    arr[i++] = " <UNKNOWN ELEMENT>";
                 }
                 
                 if (prule_rhs_elem_body->quantifier == good_Q_0_OR_1) {
-                    printf("?");
+                    arr[i++] = "?";
                 }
                 else if (prule_rhs_elem_body->quantifier == good_Q_0_OR_MORE) {
-                    printf("*");
+                    arr[i++] = "*";
                 }
                 else if (prule_rhs_elem_body->quantifier == good_Q_1_OR_MORE) {
-                    printf("+");
+                    arr[i++] = "+";
                 }
             }
-            printf("\n");
+            good_log_array(arr, i);
         }
     }
 }

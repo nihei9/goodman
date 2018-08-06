@@ -1,4 +1,5 @@
 #include "ast_normalizer.h"
+#include "logger.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -596,41 +597,41 @@ good_ASTNode *good_normalize_ast(good_ASTNodeStore *nodes, good_ASTNode *root_no
     good_ASTNode *ast;
     int num;
 
-    // printf("[good_normalize_ast] --------------------------------\n");
-    // good_print_ast(root_node, syms);
+    good_log_info("--------------------------------");
+    good_print_ast(root_node, syms);
 
     ast = good_normalize_ast_1(nodes, root_node, syms, &num);
     if (ast == NULL) {
         return NULL;
     }
 
-    // printf("[good_normalize_ast] --------------------------------\n");
-    // good_print_ast(root_node, syms);
+    good_log_info("--------------------------------");
+    good_print_ast(root_node, syms);
 
     ast = good_normalize_ast_2(nodes, root_node, syms, &num);
     if (ast == NULL) {
         return NULL;
     }
 
-    // printf("[good_normalize_ast] --------------------------------\n");
-    // good_print_ast(root_node, syms);
+    good_log_info("--------------------------------");
+    good_print_ast(root_node, syms);
 
     ast = good_normalize_ast_3(nodes, root_node, syms, &num);
     if (ast == NULL) {
         return NULL;
     }
 
-    // printf("[good_normalize_ast] --------------------------------\n");
-    // good_print_ast(root_node, syms);
+    good_log_info("--------------------------------");
+    good_print_ast(root_node, syms);
 
     ast = good_normalize_ast_4(nodes, root_node, syms, &num);
     if (ast == NULL) {
         return NULL;
     }
 
-    // printf("[good_normalize_ast] --------------------------------\n");
-    // good_print_ast(root_node, syms);
-    // printf("[good_normalize_ast] --------------------------------\n");
+    good_log_info("--------------------------------");
+    good_print_ast(root_node, syms);
+    good_log_info("--------------------------------");
 
     return ast;
 }
